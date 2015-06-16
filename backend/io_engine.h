@@ -1,9 +1,10 @@
 #ifndef IO_ENGINE_H
 #define IO_ENGINE_H
 
-namespace io_engine {
-	void launch();
-	void run();
+class io_engine {
+public:
+	static void init();
+	static void run();
 };
 
 #endif

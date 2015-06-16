@@ -26,3 +26,9 @@
 *.exe
 *.out
 *.app
+
+# vim swp
+*.swp
+
+# build dir
+build/
