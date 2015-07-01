@@ -20,3 +20,6 @@ AUX_SOURCE_DIRECTORY(backend/ SRC)
 
 add_executable(draft ${SRC})
 qt5_use_modules(draft Core)
+
+AUX_SOURCE_DIRECTORY(backend/portal PORTAL_MSRC)
+ADD_LIBRARY(portal SHARED ${PORTAL_MSRC})
