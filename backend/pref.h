@@ -19,6 +19,7 @@ public:
 	std::string get_log_fn() const { return fn_log_; }
 	FILE* get_flog() { return flog_; }
 	std::string get_libpath() const;
+	std::string get_webroot() const;
 private:
 	std::string fn_log_;
 	std::string module_path_;

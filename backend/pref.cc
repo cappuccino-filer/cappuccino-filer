@@ -123,3 +123,8 @@ std::string pref::get_libpath() const
 {
 	return std::string(".");
 }
+
+std::string pref::get_webroot() const
+{
+	return std::string("../webroot");
+}
