@@ -13,7 +13,8 @@ namespace {
 
 	void http_file_fetch(HttpServer::Response& response, shared_ptr<HttpServer::Request> request)
 	{
-		string filename("../webroot/");
+		//string filename("../webroot/");
+		string filename(pref::instance()->get_webroot());
 		string path=request->path;
 		qDebug() << "HTTP request: " << path;
 

@@ -121,7 +121,7 @@ pref* pref::instance()
 
 std::string pref::get_libpath() const
 {
-	return std::string(".");
+	return std::string("./modules");
 }
 
 std::string pref::get_webroot() const
