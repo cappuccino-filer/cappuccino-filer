@@ -33,13 +33,12 @@ void message_to_file(QtMsgType type, const QMessageLogContext &ctx, const QStrin
 	}
 	QByteArray isodate = QDateTime::currentDateTime().toString(Qt::ISODate).toLocal8Bit();
 	if (ctx.file)
-		fprintf(file, "[%s] %s: %s (%s:%u, %s)\n",
+		fprintf(file, "[%s] %s: %s (%s:%u)\n",
 			isodate.constData(),
 			prefix,
 			localMsg.constData(),
-			ctx.file,
-			ctx.line,
-			ctx.function);
+			ctx.function,
+			ctx.line);
 	else
 		fprintf(file, "[%s] %s: %s\n",
 			isodate.constData(),
@@ -62,6 +61,7 @@ struct log_closer {
 
 void logger::init()
 {
+	//qSetMessagePattern("%{file}(%{line}): %{message}");
 	qInstallMessageHandler(message_to_file);
 	static log_closer closer;
 }

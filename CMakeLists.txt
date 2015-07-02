@@ -10,6 +10,7 @@ include_directories(${CMAKE_SOURCE_DIR}/backend)
 include_directories(${CMAKE_SOURCE_DIR}/backend/core)
 
 # C++11 and Debug
+# Note: we focus on gcc/clang right now, so we uses compiler specific solutions.
 find_package(Qt5 COMPONENTS Core Widgets REQUIRED)
 set(CMAKE_CXX_FLAGS "--std=c++11 -ggdb3 ${CMAKE_CXX_FLAGS} ${Qt5Widgets_EXECUTABLE_COMPILE_FLAGS}")
 include_directories(${Qt5Core_INCLUDE_DIRS})
@@ -22,6 +23,9 @@ INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
 #MESSAGE("Qt flag: ${Qt5Core_INCLUDE_DIRS}")
 #MESSAGE("Qt flag: ${Qt5Widgets_INCLUDE_DIRS}")
 #MESSAGE("Flags: ${CMAKE_CXX_FLAGS}")
+
+# Qt debugging messages
+ADD_DEFINITIONS(-DQT_MESSAGELOGCONTEXT)
 
 AUX_SOURCE_DIRECTORY(backend/ SRC)
 
@@ -38,3 +42,5 @@ TARGET_LINK_LIBRARIES(portal core ${Boost_LIBRARIES} Qt5::Core)
 SET_TARGET_PROPERTIES(portal PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/modules)
 
 TARGET_LINK_LIBRARIES(draft core)
+
+# vim: tw=0
