@@ -3,6 +3,7 @@
 #include <fstream>
 #include <pref.h>
 #include <util.h>
+#include <pipeline.h>
 
 using namespace std;
 
