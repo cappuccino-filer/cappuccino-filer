@@ -1,9 +1,12 @@
+#include <stdexcept>
 #include <vector>
 #include <unordered_map>
 #include <thread>
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/thread/locks.hpp>
 #include <boost/thread/shared_mutex.hpp>
+#include <boost/iostreams/device/array.hpp>
+#include "util.h"
 #include "pipeline.h"
 
 #define GUARD_CHANGES(mutex) boost::shared_lock<boost::shared_mutex> lock(mutex)
@@ -27,12 +30,14 @@ namespace pipeline {
 
 	int classify_parcel(const string& classname)
 	{
+		qDebug() << "Class name: " << classname;
 		MAYDO_PIPELINE_CHANGES;
 		const auto iter = parcel_classifier.find(classname);
 		if (iter != parcel_classifier.end())
 			return iter->second;
 		WILLDO_PIPELINE_CHANGES;
 		parcel_classifier[classname] = classid;
+		qDebug() << classid;
 		return classid++;
 	}
 
@@ -54,15 +59,28 @@ namespace pipeline {
 		parcel_handlers[classid].emplace_back(handler);
 	}
 
-	void push_json(const string& json)
+	void push_json(std::istream& json)
 	{
+		qDebug() << "Incoming json: " << json.rdbuf();
 		pt::ptree tree;
-		pt::read_json(json, tree);
-		string classname = tree.get<string>("class");
-		int classid = classify_parcel(classname);
-		auto translator = get_parcel_translator(classid);
-		auto parcel = translator->parse_json(tree);
-		push_parcel(parcel);
+		try {
+			pt::read_json(json, tree);
+			qDebug() << "Json parsed to ptree";
+			string classname = tree.get<string>("class");
+			int classid = classify_parcel(classname);
+			qDebug() << "Class: " << classname << " has ID: " << classid;
+			auto translator = get_parcel_translator(classid);
+			if (translator == nullptr) {
+				qWarning() << "Unknown message class: " << classname;
+				return ;
+			}
+			auto parcel = translator->parse_json(tree);
+			push_parcel(parcel);
+		} catch (pt::json_parser_error& err) {
+			qDebug() << "Json parse error: " << err.message(); // << "\n\t\t" << "Json: ";
+		} catch (std::runtime_error& err) {
+			qDebug() << "Runtime error: " << err.what();
+		}
 	}
 
 	void push_parcel(ParcelPtr parcel)

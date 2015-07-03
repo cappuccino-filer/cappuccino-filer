@@ -4,6 +4,7 @@
 #include <pref.h>
 #include <util.h>
 #include <pipeline.h>
+#include <sstream>
 
 using namespace std;
 
@@ -33,6 +34,9 @@ namespace {
 		filename+=path;
 		ifstream ifs;
 		// A simple platform-independent file-or-directory check does not exist, but this works in most of the cases:
+		std::stringstream ss;
+		ss << "{ \"class\": \"http_get_url\", \"url\": \"" << request->path << "\" }";
+		pipeline::push_json(ss);
 		qDebug() << "Trying to open file " << filename;
 		ifs.open(filename, ifstream::in);
 

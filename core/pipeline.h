@@ -31,7 +31,7 @@ namespace pipeline {
 	void set_parcel_translator(int classid, ParcelTranslator*);
 	ParcelTranslator* get_parcel_translator(int classid);
 	void add_parcel_handler(int classid, ParcelHandler*);
-	void push_json(const std::string&); // TODO, parse json ptree and deliver
+	void push_json(std::istream&); // Note: do NOT use string or const, properity_tree only reads from non-const base_istream
 	void push_parcel(ParcelPtr);
 };
 
