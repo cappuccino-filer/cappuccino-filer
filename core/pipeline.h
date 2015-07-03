@@ -1,6 +1,7 @@
 #ifndef CORE_PIPELINE_H
 #define CORE_PIPELINE_H
 
+#include <stdexcept>
 #include <memory>
 #include <string>
 #include <boost/property_tree/ptree.hpp>
@@ -15,16 +16,7 @@ namespace pipeline {
 		virtual void async_handle(ParcelPtr) = 0;
 	};
 	struct ParcelTranslator {
-		virtual ParcelPtr parse_json(const pt::ptree&);
-	};
-
-	struct Stage {
-		std::string in_class;
-		std::string out_class;
-		virtual void async(ParcelPtr) = 0;
-	private:
-		int in_classid;
-		int out_classid;
+		virtual ParcelPtr parse_json(const pt::ptree&) = 0;
 	};
 
 	int classify_parcel(const std::string&);

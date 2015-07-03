@@ -1,4 +1,3 @@
-#include <stdexcept>
 #include <vector>
 #include <unordered_map>
 #include <thread>
@@ -75,6 +74,9 @@ namespace pipeline {
 				return ;
 			}
 			auto parcel = translator->parse_json(tree);
+			if (!parcel)
+				return ;
+			parcel->classid = classid;
 			push_parcel(parcel);
 		} catch (pt::json_parser_error& err) {
 			qDebug() << "Json parse error: " << err.message(); // << "\n\t\t" << "Json: ";
@@ -86,7 +88,9 @@ namespace pipeline {
 	void push_parcel(ParcelPtr parcel)
 	{
 		GUARD_PIPELINE_CHANGES;
+		qDebug() << "Incoming Parcel, classid: " << parcel->classid;
 		for (auto handler : parcel_handlers[parcel->classid]) {
+			qDebug() << "Incoming Parcel handled by: " << handler;
 			handler->async_handle(parcel);
 		}
 	}
