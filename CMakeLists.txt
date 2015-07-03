@@ -6,8 +6,8 @@ set (draft_VERSION_MAJOR 0)
 set (draft_VERSION_MINOR 1)
 
 include_directories(${CMAKE_SOURCE_DIR}/third-party/Simple-Web-Server)
-include_directories(${CMAKE_SOURCE_DIR}/backend)
-include_directories(${CMAKE_SOURCE_DIR}/backend/core)
+#include_directories(${CMAKE_SOURCE_DIR}/backend)
+include_directories(${CMAKE_SOURCE_DIR}/core)
 
 # C++11 and Debug
 # Note: we focus on gcc/clang right now, so we uses compiler specific solutions.
@@ -27,16 +27,16 @@ INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
 # Qt debugging messages
 ADD_DEFINITIONS(-DQT_MESSAGELOGCONTEXT)
 
-AUX_SOURCE_DIRECTORY(backend/ SRC)
+AUX_SOURCE_DIRECTORY(apps/backend/ APP_BACKEND_SRC)
 
-ADD_EXECUTABLE(draft ${SRC})
+ADD_EXECUTABLE(draft ${APP_BACKEND_SRC})
 QT5_USE_MODULES(draft Core)
 
-AUX_SOURCE_DIRECTORY(backend/core CORE_MSRC)
+AUX_SOURCE_DIRECTORY(core CORE_MSRC)
 ADD_LIBRARY(core SHARED ${CORE_MSRC})
 TARGET_LINK_LIBRARIES(core ${Boost_LIBRARIES} Qt5::Core)
 
-AUX_SOURCE_DIRECTORY(backend/portal PORTAL_MSRC)
+AUX_SOURCE_DIRECTORY(modules/portal PORTAL_MSRC)
 ADD_LIBRARY(portal SHARED ${PORTAL_MSRC})
 TARGET_LINK_LIBRARIES(portal core ${Boost_LIBRARIES} Qt5::Core)
 SET_TARGET_PROPERTIES(portal PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/modules)
