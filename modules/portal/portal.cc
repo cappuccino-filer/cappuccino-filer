@@ -5,6 +5,7 @@
 #include <util.h>
 #include <pipeline.h>
 #include <sstream>
+#include "http_utils.h"
 
 using namespace std;
 
@@ -16,57 +17,19 @@ namespace {
 	void http_file_fetch(HttpServer::Response& response, shared_ptr<HttpServer::Request> request)
 	{
 		//string filename("../webroot/");
-		string filename(pref::instance()->get_webroot());
+		// string webroot(pref::instance()->get_webroot());
 		string path=request->path;
 		qDebug() << "HTTP request: " << path;
 
-		// Replace all ".." with "." (so we can't leave the web-directory)
-		size_t pos;
-		while ((pos=path.find(".."))!=string::npos) {
-			path.erase(pos, 1);
-		}
-		if (path.find('.') == string::npos) {
-			if (path.back() != '/')
-				path += '/';
-			path += "index.html";
-		}
+        try {
+            path = portal::canonicalize_get_url(request);
+        }
+        catch (int n) {
+            portal::render_bad_request(response);
+            return;
+        }
 
-		filename+=path;
-		ifstream ifs;
-		// A simple platform-independent file-or-directory check does not exist, but this works in most of the cases:
-		std::stringstream ss;
-		ss << "{ \"class\": \"http_get_url\", \"url\": \"" << request->path << "\" }";
-		pipeline::push_json(ss);
-		qDebug() << "Trying to open file " << filename;
-		ifs.open(filename, ifstream::in);
-
-		if (ifs) {
-			ifs.seekg(0, ios::end);
-			size_t length=ifs.tellg();
-
-			ifs.seekg(0, ios::beg);
-
-			response << "HTTP/1.1 200 OK\r\nContent-Length: "
-				<< length
-				<< "\r\n\r\n";
-			// read and send 128 KB at a time if file-size>buffer_size
-			size_t buffer_size=131072;
-			if (length > buffer_size) {
-				vector<char> buffer(buffer_size);
-				size_t read_length;
-				while ((read_length=ifs.read(&buffer[0], buffer_size).gcount()) > 0) {
-					response.stream.write(&buffer[0], read_length);
-					response << HttpServer::flush;
-				}
-			}
-			else
-				response << ifs.rdbuf();
-
-			ifs.close();
-		} else {
-			string content="Could not open file "+filename;
-			response << "HTTP/1.1 400 Bad Request\r\nContent-Length: " << content.length() << "\r\n\r\n" << content;
-		}
+        portal::render(response, path);
 	}
 }
 

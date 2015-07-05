@@ -16,7 +16,7 @@ set(CMAKE_CXX_FLAGS "--std=c++11 -ggdb3 ${CMAKE_CXX_FLAGS} ${Qt5Widgets_EXECUTAB
 include_directories(${Qt5Core_INCLUDE_DIRS})
 
 # Boost
-FIND_PACKAGE(Boost 1.54.0 COMPONENTS system thread coroutine context REQUIRED)
+FIND_PACKAGE(Boost 1.54.0 COMPONENTS system thread coroutine context filesystem REQUIRED)
 message("Boost include dir: ${Boost_INCLUDE_DIR}")
 message("Boost libraries: ${Boost_LIBRARIES}")
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
