@@ -35,3 +35,6 @@ build/
 
 # OSX garbage
 .DS_Store
+
+# ignore node.js stuff
+webroot/node_modules/
