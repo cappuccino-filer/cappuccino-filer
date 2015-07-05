@@ -17,6 +17,15 @@ namespace portal {
         }
     }
 
+    const char* filesystem_separator()
+    {
+    #ifdef _WIN32
+        return "\\";
+    #else
+        return "/";
+    #endif
+    }
+
     // API
     string canonicalize_get_url(shared_ptr<HttpServer::Request> req)
     {
@@ -25,13 +34,13 @@ namespace portal {
         string url = req->path;
         vector<string> tokens;
         vector<string> canonicalized;
-        tokenize(url, "/", tokens);
+        tokenize(url, filesystem_separator(), tokens);
 
         // process tokens
         for (auto token : tokens) {
-#if 0
+        #if 0
             std::cout << "Token: " << token << std::endl;
-#endif
+        #endif
             if (token == string("..")) {
                 if (canonicalized.size() == 0) throw 400; // bad request
                 canonicalized.pop_back();
@@ -45,7 +54,7 @@ namespace portal {
         }
 
         string ret = boost::algorithm::join(canonicalized, "/");
-        return string("/") + ret;
+        return string(filesystem_separator()) + ret;
     }
 
     void render(HttpServer::Response& response, string filename) 
@@ -54,14 +63,14 @@ namespace portal {
 
         filename = webroot + filename;
         if (boost::filesystem::is_directory(filename)) 
-            filename += string("/index.html");
+            filename += string(filesystem_separator()) + string("index.html");
 
 		ifstream ifs;
         ifs.open(filename, ifstream::in);
 
         // consider to make it more flexible, one should retrieve 404 page url 
         // by configuration
-        if (!ifs.good()) ifs.open(webroot + string("/404.html"), ifstream::in);
+        if (!ifs.good()) ifs.open(webroot + string(filesystem_separator()) + string("404.html"), ifstream::in);
         // assert(ifs.good());
 
         ifs.seekg(0, ios::end);
