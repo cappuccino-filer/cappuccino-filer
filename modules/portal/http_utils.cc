@@ -1,11 +1,22 @@
 #include "http_utils.h"
 
+#include <QDebug> 
+#include <map>
+#include <vector>
+#include <fstream>
+#include <iostream>
+#include <boost/tokenizer.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/algorithm/string/join.hpp>
+
+#include <pref.h>
+
 using namespace std;
 
 namespace portal {
 
 	// Auxiliary methods
-	void tokenize(string url, const char* delimiter, vector<string> &tokens)
+	void tokenize(const string& url, const char* delimiter, vector<string> &tokens)
 	{
 		assert(url.length() > 0);
 		assert(delimiter);
@@ -58,11 +69,11 @@ namespace portal {
 		return string("/") + ret;
 	}
 
-	void render(HttpServer::Response& response, string filename) 
+	void render(HttpServer::Response& response, const string& reqpath) 
 	{
 		string webroot(pref::instance()->get_webroot());
+		string filename = webroot + reqpath;
 
-		filename = webroot + filename;
 		if (boost::filesystem::is_directory(filename)) 
 			filename += string("/index.html");
 
@@ -79,7 +90,7 @@ namespace portal {
 		assert(ifs.good());
 
 		ifs.seekg(0, ios::end);
-		size_t length=ifs.tellg();
+		size_t length = ifs.tellg();
 
 		ifs.seekg(0, ios::beg);
 
@@ -99,8 +110,7 @@ namespace portal {
 				response.stream.write(&buffer[0], read_length);
 				response << HttpServer::flush;
 			}
-		}
-		else
+		} else
 			response << ifs.rdbuf();
 
 		ifs.close();

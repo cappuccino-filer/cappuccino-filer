@@ -22,13 +22,12 @@ namespace {
 
 	void http_file_fetch(HttpServer::Response& response, shared_ptr<HttpServer::Request> request)
 	{
-		string path=request->path;
+		string path = request->path;
 		qDebug() << "HTTP GET request: " << path;
 
 		try {
 			path = portal::canonicalize_get_url(request);
-		}
-		catch (int n) {
+		} catch (int n) {
 			portal::render_bad_request(response);
 			return;
 		}
@@ -38,6 +37,14 @@ namespace {
 
 	void http_post_json(HttpServer::Response& response, shared_ptr<HttpServer::Request> request)
 	{
+#if 0
+		stringstream ss;
+		request->content >> ss.rdbuf();
+		string content=ss.str();
+		qDebug() << "HTTP POST request to " << request->path << " content: " << content;
+		request->content.seekg(0, ios::beg);
+#endif
+
 		boost::property_tree::ptree pt;
 		boost::property_tree::read_json(request->content, pt);
 
@@ -48,7 +55,8 @@ namespace {
 		// temporary implementation
 		response << "The class is " << pt.get<string>("class") << "\n";
 		response << "Welcome! You have found the secret POST method!\n";
-		response << HttpServer::flush;
+		//response << HttpServer::flush;
+		qDebug() << "HTTP POST response: " << request->path;
 	}
 }
 
