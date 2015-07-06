@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3.4
 
 import json
 import requests
@@ -12,8 +12,8 @@ payload = { \
 url = "http://localhost:8080/"
 
 response = requests.get(url)
-print "GET status:", response.status_code
+print("GET status:", response.status_code);
 
 response = requests.post(url, data=json.dumps(payload))
-print "POST status:", response.status_code
-print "POST content:", response.text
+print("POST status:", response.status_code);
+print("POST content:", response.text);
