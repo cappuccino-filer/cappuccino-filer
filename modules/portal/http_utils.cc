@@ -17,6 +17,15 @@ namespace portal {
         }
     }
 
+    void make_response_header(HttpServer::Response& response, string status, map<string, string> &header_info) 
+    {
+        response << "HTTP/1.1 " << status << "\r\n";
+        for (auto& kvpair : header_info) {
+            response << kvpair.first << ": " << kvpair.second << "\r\n";
+        }
+        response << "\r\n";
+    }
+
     // API
     string canonicalize_get_url(shared_ptr<HttpServer::Request> req)
     {
@@ -59,19 +68,25 @@ namespace portal {
 		ifstream ifs;
         ifs.open(filename, ifstream::in);
 
+        bool notFound = false;
         // consider to make it more flexible, one should retrieve 404 page url 
         // by configuration
-        if (!ifs.good()) ifs.open(webroot + string("/404.html"), ifstream::in);
-        // assert(ifs.good());
+        if (!ifs.good()) {
+            notFound = true;
+            ifs.open(webroot + string("/404.html"), ifstream::in);
+        }
+        assert(ifs.good());
 
         ifs.seekg(0, ios::end);
         size_t length=ifs.tellg();
 
         ifs.seekg(0, ios::beg);
 
-        response << "HTTP/1.1 200 OK\r\nContent-Length: "
-            << length
-            << "\r\n\r\n";
+        map<string, string> header_info = {
+            { "Content-Length", to_string(length) }
+        };
+        string status = notFound ? "404 NOT FOUND" : "200 OK";
+        make_response_header(response, status, header_info);
 
         // read and send 128 KB at a time if file-size>buffer_size
         size_t buffer_size=131072;
