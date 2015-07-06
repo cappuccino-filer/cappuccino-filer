@@ -1,4 +1,5 @@
 #include <QDebug> 
+#include <map>
 #include <vector>
 #include <string>
 #include <fstream>
@@ -24,6 +25,9 @@ namespace portal {
     // i.e. remove all "..", "." characters
     // This method will throw 400 error if trying to leave webroot
     string canonicalize_get_url(shared_ptr<HttpServer::Request> req);
+
+    // fill in fields for http response header
+    void make_response_header(HttpServer::Response& response, string status, map<string, string> &header_info);
 
     // render static page with header
     void render(HttpServer::Response& response, string filename);
