@@ -13,7 +13,7 @@
 #include <pref.h>
 
 #ifndef PORTAL_HTTP_UTILS_H
-#define PORTAL_PORTAL_HTTP_UTILS_H
+#define PORTAL_HTTP_UTILS_H
 
 using namespace std;
 
