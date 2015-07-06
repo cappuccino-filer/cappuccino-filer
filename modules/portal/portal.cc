@@ -48,13 +48,18 @@ namespace {
 		boost::property_tree::ptree pt;
 		boost::property_tree::read_json(request->content, pt);
 
-		map<string, string> header_info;
 		string status = "200 OK";
+		stringstream ss;
+		ss << "The class is " << pt.get<string>("class") << "\n";
+		ss << "Welcome! You have found the secret POST method!\n";
+		string cont = ss.str();
+		map<string, string> header_info = {
+			{ "Content-Length", to_string(cont.size()) }
+		};
 		portal::make_response_header(response, status, header_info);
+		response << cont;
 
 		// temporary implementation
-		response << "The class is " << pt.get<string>("class") << "\n";
-		response << "Welcome! You have found the secret POST method!\n";
 		//response << HttpServer::flush;
 		qDebug() << "HTTP POST response: " << request->path;
 	}
