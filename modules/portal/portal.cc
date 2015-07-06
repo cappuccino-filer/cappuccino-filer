@@ -41,7 +41,7 @@ namespace {
         boost::property_tree::ptree pt;
         boost::property_tree::read_json(request->content, pt);
 
-        map<string, string> header_info = {};
+        map<string, string> header_info;
         string status = "200 OK";
         portal::make_response_header(response, status, header_info);
 
