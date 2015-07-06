@@ -5,6 +5,12 @@
 #include <util.h>
 #include <pipeline.h>
 #include <sstream>
+
+//Added for the json-example
+#define BOOST_SPIRIT_THREADSAFE
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
+
 #include "http_utils.h"
 
 using namespace std;
@@ -16,10 +22,8 @@ namespace {
 
 	void http_file_fetch(HttpServer::Response& response, shared_ptr<HttpServer::Request> request)
 	{
-		//string filename("../webroot/");
-		// string webroot(pref::instance()->get_webroot());
 		string path=request->path;
-		qDebug() << "HTTP request: " << path;
+		qDebug() << "HTTP GET request: " << path;
 
         try {
             path = portal::canonicalize_get_url(request);
@@ -31,12 +35,28 @@ namespace {
 
         portal::render(response, path);
 	}
+
+	void http_post_json(HttpServer::Response& response, shared_ptr<HttpServer::Request> request)
+    {
+        boost::property_tree::ptree pt;
+        boost::property_tree::read_json(request->content, pt);
+
+        map<string, string> header_info = {};
+        string status = "200 OK";
+        portal::make_response_header(response, status, header_info);
+
+        // temporary implementation
+        response << "The class is " << pt.get<string>("class") << "\n";
+        response << "Welcome! You have found the secret POST method!\n";
+        response << HttpServer::flush;
+    }
 }
 
 int init_httpd() 
 {
 	server = new HttpServer(8080, 1);
-	server->default_resource["GET"] = http_file_fetch;
+	server->default_resource["GET"]  = http_file_fetch;
+	server->default_resource["POST"] = http_post_json;
 	auto pserver = server;
 	qDebug() << "Creating HTTP worker thread with server " << server;
 	server_thread = new thread([pserver](){

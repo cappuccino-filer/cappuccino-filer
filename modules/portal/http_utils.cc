@@ -17,6 +17,8 @@ namespace portal {
         }
     }
 
+    // API
+
     void make_response_header(HttpServer::Response& response, string status, map<string, string> &header_info) 
     {
         response << "HTTP/1.1 " << status << "\r\n";
@@ -26,7 +28,6 @@ namespace portal {
         response << "\r\n";
     }
 
-    // API
     string canonicalize_get_url(shared_ptr<HttpServer::Request> req)
     {
         assert(req);
@@ -83,6 +84,7 @@ namespace portal {
         ifs.seekg(0, ios::beg);
 
         map<string, string> header_info = {
+            { "class",          "http_file_fetch" },
             { "Content-Length", to_string(length) }
         };
         string status = notFound ? "404 NOT FOUND" : "200 OK";
