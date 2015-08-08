@@ -20,7 +20,9 @@ namespace {
 	HttpServer* server = nullptr;
 	thread* server_thread;
 
-	void http_file_fetch(HttpServer::Response& response, shared_ptr<HttpServer::Request> request)
+	boost::promise<int> mkpromise(int value) { boost::promise<int> ret; ret.set_value(value); return ret; }
+
+	boost::promise<int> http_file_fetch(HttpServer::ResponsePtr response, shared_ptr<HttpServer::Request> request)
 	{
 		string path = request->path;
 		qDebug() << "HTTP GET request: " << path;
@@ -28,14 +30,15 @@ namespace {
 		try {
 			path = portal::canonicalize_get_url(request);
 		} catch (int n) {
-			portal::render_bad_request(response);
-			return;
+			portal::render_bad_request(*response);
+			return mkpromise(0);
 		}
 
-		portal::render(response, path);
+		portal::render(*response, path);
+		return mkpromise(0);
 	}
 
-	void http_post_json(HttpServer::Response& response, shared_ptr<HttpServer::Request> request)
+	boost::promise<int> http_post_json(HttpServer::ResponsePtr response, shared_ptr<HttpServer::Request> request)
 	{
 #if 0
 		stringstream ss;
@@ -56,12 +59,13 @@ namespace {
 		map<string, string> header_info = {
 			{ "Content-Length", to_string(cont.size()) }
 		};
-		portal::make_response_header(response, status, header_info);
-		response << cont;
+		portal::make_response_header(*response, status, header_info);
+		(*response) << cont;
 
 		// temporary implementation
 		//response << HttpServer::flush;
 		qDebug() << "HTTP POST response: " << request->path;
+		return mkpromise(3389);
 	}
 }
 
