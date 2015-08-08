@@ -7,11 +7,11 @@
 #include <vector>
 #include <QtCore/QLibrary> 
 
-class pref {
+class Pref {
 public:
-	static pref* instance();
+	static Pref* instance();
 
-	pref();
+	Pref();
 	void load_preference(int argc, char* argv[]);
 	void load_modules();
 	void terminate_modules();

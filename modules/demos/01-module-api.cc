@@ -16,7 +16,7 @@ int draft_module_init()
  	 * On load this module will access pref and output libpath preference
 	 * to debugging output.
 	 */
-	qDebug() << "[Pref] libpath: " << pref::instance()->get_libpath();
+	qDebug() << "[Pref] libpath: " << Pref::instance()->get_libpath();
 	return 0;
 }
 

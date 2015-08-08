@@ -71,7 +71,7 @@ namespace portal {
 
 	void render(HttpServer::Response& response, const string& reqpath) 
 	{
-		string webroot(pref::instance()->get_webroot());
+		string webroot(Pref::instance()->get_webroot());
 		string filename = webroot + reqpath;
 
 		if (boost::filesystem::is_directory(filename)) 

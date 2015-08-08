@@ -9,7 +9,7 @@
 namespace {
 static FILE* flog()
 {
-	return pref::instance()->get_flog();
+	return Pref::instance()->get_flog();
 }
 
 void message_to_file(QtMsgType type, const QMessageLogContext &ctx, const QString &msg)

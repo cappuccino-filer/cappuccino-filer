@@ -1,7 +1,7 @@
 #include <getopt.h>
 #include <QDebug> 
 #include <QtCore/QDirIterator> 
-#include "pref.h"
+#include "Pref.h"
 #include "util.h"
 #include "module.h"
 
@@ -14,7 +14,7 @@ static struct option opts[] = {
 	{NULL,		no_argument,		NULL,		0}
 };
 
-void pref::load_preference(int argc, char* argv[])
+void Pref::load_preference(int argc, char* argv[])
 {
 	int longidx;
 	int val;
@@ -41,7 +41,7 @@ void pref::load_preference(int argc, char* argv[])
 	}
 }
 
-void pref::load_modules()
+void Pref::load_modules()
 {
 	QDirIterator di(cvstr(get_libpath()));
 	while (di.hasNext()) {
@@ -83,7 +83,7 @@ void pref::load_modules()
 	}
 }
 
-void pref::terminate_modules()
+void Pref::terminate_modules()
 {
 	for (auto& plib : libs_) {
 		auto& lib = *plib;
@@ -102,29 +102,29 @@ void pref::terminate_modules()
 	}
 }
 
-pref::pref()
+Pref::Pref()
 {
 	load_defaults();
 }
 
-void pref::load_defaults()
+void Pref::load_defaults()
 {
 	module_path_ = ".";
 	flog_ = stderr;
 }
 
-pref* pref::instance()
+Pref* Pref::instance()
 {
-	static pref inst_;
+	static Pref inst_;
 	return &inst_;
 }
 
-std::string pref::get_libpath() const
+std::string Pref::get_libpath() const
 {
 	return std::string("./modules");
 }
 
-std::string pref::get_webroot() const
+std::string Pref::get_webroot() const
 {
 	return std::string("../webroot");
 }
