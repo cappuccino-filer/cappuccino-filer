@@ -1,6 +1,7 @@
 #include <pref.h>
 #include <io_engine.h>
 #include <logger.h>
+#include <caf/all.hpp>
 
 int main(int argc, char* argv[])
 {
@@ -16,5 +17,9 @@ int main(int argc, char* argv[])
 	io_engine::run();
 	Pref::instance()->terminate_modules();
 	logger::dump();
+
+	// Cleanup CAF
+	caf::await_all_actors_done();
+	caf::shutdown();
 	return 0;
 }

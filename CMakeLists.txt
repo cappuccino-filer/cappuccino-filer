@@ -5,7 +5,8 @@ include(ExternalProject)
 set (draft_VERSION_MAJOR 0)
 set (draft_VERSION_MINOR 1)
 
-include_directories(${CMAKE_SOURCE_DIR}/third-party/Simple-Web-Server)
+include_directories(${CMAKE_SOURCE_DIR}/third-party/actor-framework/libcaf_core)
+include_directories(${CMAKE_SOURCE_DIR}/third-party/actor-framework/libcaf_io)
 #include_directories(${CMAKE_SOURCE_DIR}/backend)
 include_directories(${CMAKE_SOURCE_DIR}/core)
 
@@ -26,25 +27,40 @@ INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
 
 # Qt debugging messages
 ADD_DEFINITIONS(-DQT_MESSAGELOGCONTEXT)
+
 # Boost::future and so on
 ADD_DEFINITIONS(-DBOOST_THREAD_PROVIDES_FUTURE_WHEN_ALL_WHEN_ANY)
 ADD_DEFINITIONS(-DBOOST_THREAD_PROVIDES_FUTURE)
 ADD_DEFINITIONS(-DBOOST_THREAD_PROVIDES_FUTURE_CONTINUATION)
 
-AUX_SOURCE_DIRECTORY(apps/backend/ APP_BACKEND_SRC)
+# CAF
+include(ExternalProject)
+SET(CAF_BIN "${CMAKE_BINARY_DIR}/caf")
+ExternalProject_Add(CAF
+	SOURCE_DIR "${CMAKE_SOURCE_DIR}/third-party/actor-framework/"
+	GIT_SUBMODULES "${CMAKE_SOURCE_DIR}/third-party/actor-framework/"
+	INSTALL_COMMAND ""
+	BINARY_DIR "${CAF_BIN}")
+SET(CAF_LIBS ${CAF_BIN}/lib/libcaf_core.so ${CAF_BIN}/lib/libcaf_io.so)
 
+# Main program
+AUX_SOURCE_DIRECTORY(apps/backend/ APP_BACKEND_SRC)
 ADD_EXECUTABLE(draft ${APP_BACKEND_SRC})
 QT5_USE_MODULES(draft Core)
 
+# Core library
 AUX_SOURCE_DIRECTORY(core CORE_MSRC)
 ADD_LIBRARY(core SHARED ${CORE_MSRC})
-TARGET_LINK_LIBRARIES(core ${Boost_LIBRARIES} Qt5::Core)
+ADD_DEPENDENCIES(core CAF)
+TARGET_LINK_LIBRARIES(core ${Boost_LIBRARIES} Qt5::Core ${CAF_LIBS})
 
+# Modules
 AUX_SOURCE_DIRECTORY(modules/portal PORTAL_MSRC)
 ADD_LIBRARY(portal SHARED ${PORTAL_MSRC})
 TARGET_LINK_LIBRARIES(portal core ${Boost_LIBRARIES} Qt5::Core)
 SET_TARGET_PROPERTIES(portal PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/modules)
 
+# Demo modules
 ADD_LIBRARY(00-stub SHARED modules/demos/00-stub-module.cc)
 TARGET_LINK_LIBRARIES(00-stub core ${Boost_LIBRARIES} Qt5::Core)
 SET_TARGET_PROPERTIES(00-stub PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/modules)
