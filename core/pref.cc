@@ -1,7 +1,7 @@
 #include <getopt.h>
 #include <QDebug> 
 #include <QtCore/QDirIterator> 
-#include "Pref.h"
+#include "pref.h"
 #include "util.h"
 #include "module.h"
 

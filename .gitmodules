@@ -1,3 +1,6 @@
 [submodule "third-party/Simple-Web-Server"]
 	path = third-party/Simple-Web-Server
 	url = https://github.com/eidheim/Simple-Web-Server.git
+[submodule "third-party/actor-framework"]
+	path = third-party/actor-framework
+	url = https://github.com/actor-framework/actor-framework.git
