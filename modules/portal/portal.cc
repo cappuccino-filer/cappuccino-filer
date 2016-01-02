@@ -4,7 +4,7 @@
 #include <util.h>
 #include <pipeline.h>
 #include <sstream>
-#include "server_http.hpp"
+#include "afhttp.hpp"
 
 //Added for the json-example
 #define BOOST_SPIRIT_THREADSAFE
@@ -67,21 +67,18 @@ namespace {
 		qDebug() << "HTTP POST response: " << request->path;
 		return mkpromise(3389);
 	}
-}
 
-int init_httpd() 
-{
-	server = new HttpServer(8080, 1);
-	server->default_resource["GET"]  = http_file_fetch;
-	server->default_resource["POST"] = http_post_json;
-	auto pserver = server;
-	qDebug() << "Creating HTTP worker thread with server " << server;
-	server_thread = new thread([pserver](){
-			qDebug() << "Starting HTTP server with server " << pserver;
-			pserver->start();
-			qDebug() << "HTTP server started";
-			});
-	return 0;
+	AfHttpd server;
+
+	int init_httpd() 
+	{
+		server.set_sink(caf::group::get("local", "http"));
+		server.default_resource["GET"]  = http_file_fetch;
+		server.default_resource["POST"] = http_post_json;
+		qDebug() << "Creating HTTP worker thread with server " << server;
+		server.active(8080);
+		return 0;
+	}
 }
 
 extern "C" {
@@ -99,11 +96,8 @@ int draft_module_init()
 
 int draft_module_term()
 {
-	qDebug() << "Stopping HTTP server and worker thread";
-	server->stop();
-	qDebug() << "HTTP server stopped";
-	server_thread->join();
-	qDebug() << "HTTP worker thread stopped";
+	qDebug() << "Send EXIT to AfHttpd";
+	server.shutdown(); // Will leak resource for now...
 	return 0;
 }
 
