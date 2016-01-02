@@ -12,6 +12,7 @@
 #include <boost/property_tree/json_parser.hpp>
 
 #include "http_utils.h"
+#include <caf/all.hpp>
 
 using namespace std;
 
@@ -19,10 +20,11 @@ namespace {
 	typedef SimpleWeb::Server<SimpleWeb::HTTP> HttpServer;
 	HttpServer* server = nullptr;
 	thread* server_thread;
+	caf::actor resp_actor;
 
 	boost::promise<int> mkpromise(int value) { boost::promise<int> ret; ret.set_value(value); return ret; }
 
-	boost::promise<int> http_file_fetch(HttpServer::ResponsePtr response, shared_ptr<HttpServer::Request> request)
+	boost::future<int> http_file_fetch(HttpServer::ResponsePtr response, shared_ptr<HttpServer::Request> request)
 	{
 		string path = request->path;
 		qDebug() << "HTTP GET request: " << path;
@@ -31,14 +33,14 @@ namespace {
 			path = portal::canonicalize_get_url(request);
 		} catch (int n) {
 			portal::render_bad_request(*response);
-			return mkpromise(0);
+			return mkpromise(0).get_future();
 		}
 
 		portal::render(*response, path);
-		return mkpromise(0);
+		return mkpromise(0).get_future();
 	}
 
-	boost::promise<int> http_post_json(HttpServer::ResponsePtr response, shared_ptr<HttpServer::Request> request)
+	boost::future<int> http_post_json(HttpServer::ResponsePtr response, shared_ptr<HttpServer::Request> request)
 	{
 #if 0
 		stringstream ss;
@@ -50,6 +52,7 @@ namespace {
 
 		boost::property_tree::ptree pt;
 		boost::property_tree::read_json(request->content, pt);
+		//actor handler = Pref::instance()->get_actor(pt.get<string>("class"));
 
 		string status = "200 OK";
 		stringstream ss;
@@ -65,7 +68,7 @@ namespace {
 		// temporary implementation
 		//response << HttpServer::flush;
 		qDebug() << "HTTP POST response: " << request->path;
-		return mkpromise(3389);
+		return mkpromise(3389).get_future();
 	}
 }
 
