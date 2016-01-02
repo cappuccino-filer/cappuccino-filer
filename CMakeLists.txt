@@ -13,7 +13,7 @@ include_directories(${CMAKE_SOURCE_DIR}/core)
 # C++11 and Debug
 # Note: we focus on gcc/clang right now, so we uses compiler specific solutions.
 find_package(Qt5 COMPONENTS Core Widgets REQUIRED)
-set(CMAKE_CXX_FLAGS "--std=c++11 -ggdb3 ${CMAKE_CXX_FLAGS} ${Qt5Widgets_EXECUTABLE_COMPILE_FLAGS}")
+set(CMAKE_CXX_FLAGS "--std=c++11 -ggdb3 -Wno-deprecated-declarations ${CMAKE_CXX_FLAGS} ${Qt5Widgets_EXECUTABLE_COMPILE_FLAGS}")
 include_directories(${Qt5Core_INCLUDE_DIRS})
 
 # Boost
@@ -73,6 +73,9 @@ SET_TARGET_PROPERTIES(02-json-parser PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE
 ADD_LIBRARY(demo03 SHARED modules/demos/03-parcel-handler.cc)
 TARGET_LINK_LIBRARIES(demo03 core ${Boost_LIBRARIES} Qt5::Core)
 SET_TARGET_PROPERTIES(demo03 PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/modules)
+ADD_LIBRARY(demo04 SHARED modules/demos/04-actor-basics.cc)
+TARGET_LINK_LIBRARIES(demo04 core ${CAF_LIBS})
+SET_TARGET_PROPERTIES(demo04 PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/modules)
 
 TARGET_LINK_LIBRARIES(draft core)
 

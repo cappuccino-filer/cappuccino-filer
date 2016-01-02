@@ -40,6 +40,35 @@ namespace {
 		return mkpromise(0).get_future();
 	}
 
+	using boost::property_tree::write_json;
+
+	caf::behavior reply_json(
+			caf::event_based_actor* self,
+			shared_ptr<HttpServer::Request> request,
+			HttpServer::ResponsePtr response
+			)
+	{
+		return { [=] (std::shared_ptr<boost::property_tree::ptree> reply) 
+			{
+				stringstream jsonstream;
+				write_json(jsonstream, *reply, false);
+				string jsonstr = jsonstream.str();
+
+				string status = "201 Created";
+				map<string, string> header_info = {
+					{ "Content-Length", to_string(jsonstr.size()) }
+				};
+
+				portal::make_response_header(*response, status, header_info);
+				(*response) << jsonstr;
+				std::cout << jsonstr;
+
+				response->promise.set_value(0);
+				self->quit();
+			}
+		};
+	}
+
 	boost::future<int> http_post_json(HttpServer::ResponsePtr response, shared_ptr<HttpServer::Request> request)
 	{
 #if 0
@@ -50,10 +79,22 @@ namespace {
 		request->content.seekg(0, ios::beg);
 #endif
 
-		boost::property_tree::ptree pt;
-		boost::property_tree::read_json(request->content, pt);
-		//actor handler = Pref::instance()->get_actor(pt.get<string>("class"));
+		auto pt = std::make_shared<boost::property_tree::ptree>();
+		boost::property_tree::read_json(request->content, *pt);
+		try {
+			auto path = portal::canonicalize_get_url(request);
+			auto handler = Pref::instance()->match_actor(request->path);
+			response->promise = boost::promise<int>();
+			auto fut = response->promise.get_future();
+			auto rep_actor = caf::spawn(reply_json, request, response);
+			send_as(rep_actor, handler, pt);
+			return fut;
+		} catch (int n) {
+			portal::render_bad_request(*response);
+			return mkpromise(0).get_future();
+		}
 
+		/*
 		string status = "200 OK";
 		stringstream ss;
 		ss << "The class is " << pt.get<string>("class") << "\n";
@@ -69,7 +110,22 @@ namespace {
 		//response << HttpServer::flush;
 		qDebug() << "HTTP POST response: " << request->path;
 		return mkpromise(3389).get_future();
+		*/
 	}
+
+#if 0
+	class ResponseActor : public caf::even_based_actor {
+		caf::behavior make_behavior() override
+		{
+			return {
+				[=] (boost::promise<int> prom)
+				{
+					prom.set_value(0);
+				}
+			};
+		}
+	};
+#endif
 }
 
 int init_httpd() 

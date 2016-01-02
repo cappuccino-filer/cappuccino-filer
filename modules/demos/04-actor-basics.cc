@@ -1,0 +1,39 @@
+/*
+ * Demo 4: Basic actor
+ *
+ */
+
+#include <pref.h>
+#define BOOST_SPIRIT_THREADSAFE
+#include <boost/property_tree/json_parser.hpp>
+#include <boost/property_tree/ptree.hpp>
+
+extern "C" {
+
+
+caf::behavior mkecho(caf::event_based_actor* self)
+{
+	return { [](std::shared_ptr<boost::property_tree::ptree> pt)
+		{
+			return pt;
+		}
+	};
+}
+
+const char* apipath = "/api/demo04";
+
+int draft_module_init()
+{
+	caf::actor echo = caf::spawn(mkecho);
+	Pref::instance()->install_actor(apipath, echo);
+	return 0;
+}
+
+int draft_module_term()
+{
+	caf::anon_send_exit(Pref::instance()->uninstall_actor(apipath),
+			caf::exit_reason::user_shutdown);
+	return 0;
+}
+
+};

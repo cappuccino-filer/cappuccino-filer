@@ -128,3 +128,27 @@ std::string Pref::get_webroot() const
 {
 	return std::string("../webroot");
 }
+
+void Pref::install_actor(const std::string& path, caf::actor actor)
+{
+	actor_table_[path] = actor;
+}
+
+caf::actor Pref::match_actor(const std::string& path)
+{
+	auto f = actor_table_.find(path);
+	if (f == actor_table_.end())
+		throw 403;
+	return f->second;
+}
+
+caf::actor Pref::uninstall_actor(const std::string& path)
+{
+	auto f = actor_table_.find(path);
+	if (f != actor_table_.end()) {
+		auto ret = f->second;
+		actor_table_.erase(f);
+		return ret;
+	}
+	return caf::invalid_actor;
+}

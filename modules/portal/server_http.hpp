@@ -33,9 +33,12 @@ namespace SimpleWeb {
 					strand(strand), yield(yield), socket(socket),
 					stream(&streambuf) {}
 
-		Response() = delete;
+			Response() = delete;
 
-			void async_flush(std::function<void(const boost::system::error_code&)> callback=nullptr) {
+			void async_flush(
+					std::function<void(const boost::system::error_code&)> callback=nullptr
+					)
+			{
 				if(!socket->lowest_layer().is_open()) {
 					throw std::runtime_error("Broken pipe.");
 				}
@@ -49,12 +52,18 @@ namespace SimpleWeb {
 				auto socket_=this->socket;
 				//auto async_writing_=this->async_writing;
 				
-				boost::asio::async_write(*socket, *write_buffer, 
-						strand->wrap([socket_, write_buffer, callback]
-						(const boost::system::error_code& ec, size_t bytes_transferred) {
-					if(callback)
-						callback(ec);
-				}));
+				boost::asio::async_write(*socket,
+					*write_buffer, 
+					strand->wrap(
+						[socket_, write_buffer, callback]
+							(const boost::system::error_code& ec,
+							 size_t bytes_transferred)
+						{
+							if(callback)
+								callback(ec);
+						}
+					)
+				);
 			}
 			
 			void flush() {
@@ -83,10 +92,11 @@ namespace SimpleWeb {
 				return manip(*this);
 			}
 
-		boost::future<void> future;
+			boost::future<void> future;
+			boost::promise<int> promise;
 		};
 
-	typedef std::shared_ptr<Response> ResponsePtr;
+		typedef std::shared_ptr<Response> ResponsePtr;
 		
 		static Response& async_flush(Response& r) {
 			r.async_flush();
