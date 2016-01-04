@@ -1,14 +1,10 @@
 #include <QDebug> 
 #include <fstream>
 #include <pref.h>
+#include <json.h>
 #include <util.h>
 #include <sstream>
 #include "server_http.hpp"
-
-//Added for the json-example
-#define BOOST_SPIRIT_THREADSAFE
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/json_parser.hpp>
 
 #include "http_utils.h"
 #include <caf/all.hpp>
@@ -47,7 +43,7 @@ namespace {
 			HttpServer::ResponsePtr response
 			)
 	{
-		return { [=] (std::shared_ptr<boost::property_tree::ptree> reply) 
+		return { [=] (const shared_ptree reply) 
 			{
 				stringstream jsonstream;
 				write_json(jsonstream, *reply, false);
@@ -70,14 +66,6 @@ namespace {
 
 	boost::future<int> http_api(HttpServer::ResponsePtr response, shared_ptr<HttpServer::Request> request)
 	{
-#if 0
-		stringstream ss;
-		request->content >> ss.rdbuf();
-		string content=ss.str();
-		qDebug() << "HTTP POST request to " << request->path << " content: " << content;
-		request->content.seekg(0, ios::beg);
-#endif
-
 		auto pt = std::make_shared<boost::property_tree::ptree>();
 		boost::property_tree::read_json(request->content, *pt);
 		try {
@@ -92,39 +80,7 @@ namespace {
 			portal::render_bad_request(*response);
 			return mkpromise(0).get_future();
 		}
-
-		/*
-		string status = "200 OK";
-		stringstream ss;
-		ss << "The class is " << pt.get<string>("class") << "\n";
-		ss << "Welcome! You have found the secret POST method!\n";
-		string cont = ss.str();
-		map<string, string> header_info = {
-			{ "Content-Length", to_string(cont.size()) }
-		};
-		portal::make_response_header(*response, status, header_info);
-		(*response) << cont;
-
-		// temporary implementation
-		//response << HttpServer::flush;
-		qDebug() << "HTTP POST response: " << request->path;
-		return mkpromise(3389).get_future();
-		*/
 	}
-
-#if 0
-	class ResponseActor : public caf::even_based_actor {
-		caf::behavior make_behavior() override
-		{
-			return {
-				[=] (boost::promise<int> prom)
-				{
-					prom.set_value(0);
-				}
-			};
-		}
-	};
-#endif
 }
 
 int init_httpd() 
