@@ -1,6 +1,9 @@
 /*
  * Demo 4: Basic actor
  *
+ * The implementation of an API should be an actor, and installed by calling
+ * Pref::install_actor(). This actor should accept message of
+ * std::shared_ptr<boost::property_tree::ptree>.
  */
 
 #include <pref.h>

@@ -2,7 +2,6 @@
 #include <fstream>
 #include <pref.h>
 #include <util.h>
-#include <pipeline.h>
 #include <sstream>
 #include "server_http.hpp"
 
@@ -69,7 +68,7 @@ namespace {
 		};
 	}
 
-	boost::future<int> http_post_json(HttpServer::ResponsePtr response, shared_ptr<HttpServer::Request> request)
+	boost::future<int> http_api(HttpServer::ResponsePtr response, shared_ptr<HttpServer::Request> request)
 	{
 #if 0
 		stringstream ss;
@@ -132,7 +131,7 @@ int init_httpd()
 {
 	server = new HttpServer(8080, 1);
 	server->default_resource["GET"]  = http_file_fetch;
-	server->default_resource["POST"] = http_post_json;
+	server->resource["^/api/.*"]["POST"] = http_api;
 	auto pserver = server;
 	qDebug() << "Creating HTTP worker thread with server " << server;
 	server_thread = new thread([pserver](){
