@@ -11,8 +11,8 @@
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 
-extern "C" {
 
+namespace {
 
 caf::behavior mkecho(caf::event_based_actor* self)
 {
@@ -25,6 +25,9 @@ caf::behavior mkecho(caf::event_based_actor* self)
 
 const char* apipath = "/api/demo04";
 
+}
+
+extern "C" {
 int draft_module_init()
 {
 	caf::actor echo = caf::spawn(mkecho);
