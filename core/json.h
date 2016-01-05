@@ -7,8 +7,9 @@
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 
-typedef std::shared_ptr<boost::property_tree::ptree> shared_ptree;
+using boost::property_tree::ptree;
+typedef std::shared_ptr<ptree> shared_ptree;
 
-const shared_ptree json_mkerror(const std::string&);
+shared_ptree json_mkerror(const std::string&);
 
 #endif

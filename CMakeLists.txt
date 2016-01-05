@@ -55,10 +55,17 @@ ADD_DEPENDENCIES(core CAF)
 TARGET_LINK_LIBRARIES(core ${Boost_LIBRARIES} Qt5::Core ${CAF_LIBS})
 
 # Modules
+## portal (embedded httpd) 
 AUX_SOURCE_DIRECTORY(modules/portal PORTAL_MSRC)
 ADD_LIBRARY(portal SHARED ${PORTAL_MSRC})
 TARGET_LINK_LIBRARIES(portal core ${Boost_LIBRARIES} Qt5::Core)
 SET_TARGET_PROPERTIES(portal PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/modules)
+
+## storage (interacting with file system directly)
+AUX_SOURCE_DIRECTORY(modules/storage STORAGE_MSRC)
+ADD_LIBRARY(storage SHARED ${STORAGE_MSRC})
+TARGET_LINK_LIBRARIES(storage core ${Boost_LIBRARIES})
+SET_TARGET_PROPERTIES(storage PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/modules)
 
 # Demo modules
 ADD_LIBRARY(00-stub SHARED modules/demos/00-stub-module.cc)
