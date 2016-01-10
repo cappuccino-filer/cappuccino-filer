@@ -2,7 +2,7 @@
 #define DATABASE_DATABASE_H
 
 #include <memory>
-#include "filestat.h"
+#include <sqlpp11/mysql/mysql.h>
 
 /*
  * TODO: database interface
@@ -15,14 +15,15 @@
 
 class Pref;
 
-class Database {
+using DatabasePtr = std::shared_ptr<sqlpp::mysql::connection>;
+
+class DatabaseRegistry {
 public:
-	Database(Pref*);
-	virtual ~Database();
-
+	static void register_database(sqlpp::mysql::connection* db) { db_.reset(db); }
+	static void close_database();
+	static DatabasePtr get_db();
 private:
+	static DatabasePtr db_;
 };
-
-typedef std::shared_ptr<Database> DatabasePtr;
 
 #endif

@@ -4,3 +4,12 @@
 [submodule "third-party/actor-framework"]
 	path = third-party/actor-framework
 	url = https://github.com/actor-framework/actor-framework.git
+[submodule "third-party/sqlpp11"]
+	path = third-party/sqlpp11
+	url = https://github.com/rbock/sqlpp11.git
+[submodule "third-party/date"]
+	path = third-party/date
+	url = https://github.com/HowardHinnant/date.git
+[submodule "third-party/sqlpp11-connector-mysql"]
+	path = third-party/sqlpp11-connector-mysql
+	url = git@github.com:xinyazhang/sqlpp11-connector-mysql.git

@@ -3,9 +3,7 @@
 
 #include <memory>
 #include <string>
-
-class Database;
-typedef std::shared_ptr<Database> DatabasePtr;
+#include <database.h>
 
 using std::string;
 

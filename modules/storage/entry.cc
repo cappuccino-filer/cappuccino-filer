@@ -12,6 +12,7 @@
 
 #include <json.h>
 #include "filestat.h"
+#include "volume.h"
 
 namespace {
 
@@ -30,7 +31,7 @@ caf::behavior mkrelay(caf::event_based_actor* self, DatabasePtr db)
 				return json_mkerror(errmsg.c_str());
 			}
 			return pt;
-		}
+		},
 	};
 }
 
@@ -43,9 +44,10 @@ extern "C" {
 
 int draft_module_init()
 {
-	auto db = std::shared_ptr<Database>(nullptr);
+	auto db = DatabaseRegistry::get_db();
 	caf::actor dbactor = caf::spawn(mkrelay, db);
 	Pref::instance()->install_actor(apipath, dbactor);
+	Volume::instance()->scan(db);
 	return 0;
 }
 

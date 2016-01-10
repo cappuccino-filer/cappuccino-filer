@@ -1,18 +1,24 @@
 #include <getopt.h>
 #include <QDebug> 
 #include <QtCore/QDirIterator> 
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
 #include "pref.h"
 #include "util.h"
 #include "module.h"
 
 enum {
 	OPT_LOG_FILE = 1,
+	OPT_PROFILE,
 };
 
 static struct option opts[] = {
 	{"log",		required_argument,	0,	OPT_LOG_FILE},
+	{"profile",	required_argument,	0,	OPT_PROFILE},
 	{NULL,		no_argument,		NULL,		0}
 };
+
+using boost::property_tree::json_parser::read_json;
 
 void Pref::load_preference(int argc, char* argv[])
 {
@@ -23,6 +29,9 @@ void Pref::load_preference(int argc, char* argv[])
 		switch (val) {
 			case OPT_LOG_FILE:
 				fn_log_ = std::string(optarg);
+				break;
+			case OPT_PROFILE:
+				profile_ = std::string(optarg);
 				break;
 			default:
 				break;
@@ -39,14 +48,22 @@ void Pref::load_preference(int argc, char* argv[])
 			<< " for logging, all upcoming messages will be redirected";
 		flog_ = file;
 	}
+	
+	if (!profile_.empty()) {
+		std::ifstream fin(profile_);
+		if (!fin.is_open()) {
+			qDebug() << "Failed to open profile: " << profile_.c_str();
+		} else {
+			read_json(fin, *reg_);
+		}
+	}
 }
 
 void Pref::load_modules()
 {
-	QDirIterator di(cvstr(get_libpath()));
-	while (di.hasNext()) {
-		di.next();
-		auto fi = di.fileInfo();
+	QDir dir(cvstr(get_libpath()));
+	auto filist = dir.entryInfoList(QDir::Files|QDir::Executable, QDir::Name);
+	for(auto fi : filist) {
 		auto fn = fi.filePath();
 		qDebug() << "Checking " << fn;
 		if (!fi.isFile())
@@ -104,6 +121,7 @@ void Pref::terminate_modules()
 
 Pref::Pref()
 {
+	reg_ = std::make_shared<ptree>();
 	load_defaults();
 }
 
@@ -111,6 +129,15 @@ void Pref::load_defaults()
 {
 	module_path_ = ".";
 	flog_ = stderr;
+	reg_->put("mariadb.host", "localhost");
+	reg_->put("mariadb.user", "test");
+	reg_->put("mariadb.password", "test");
+	reg_->put("mariadb.database", "draft");
+	reg_->put("mariadb.port", 0);
+	reg_->put("mariadb.unix_socket", "");
+	reg_->put("mariadb.client_flag", 0);
+	// CAVEAT: REMOVE THIS IF RELEASED
+	reg_->put("mariadb.debug", true);
 }
 
 Pref* Pref::instance()
@@ -151,4 +178,11 @@ caf::actor Pref::uninstall_actor(const std::string& path)
 		return ret;
 	}
 	return caf::invalid_actor;
+}
+
+using std::string;
+
+shared_ptree Pref::get_registry()
+{
+	return reg_;
 }

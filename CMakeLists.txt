@@ -7,6 +7,9 @@ set (draft_VERSION_MINOR 1)
 
 include_directories(${CMAKE_SOURCE_DIR}/third-party/actor-framework/libcaf_core)
 include_directories(${CMAKE_SOURCE_DIR}/third-party/actor-framework/libcaf_io)
+include_directories(${CMAKE_SOURCE_DIR}/third-party/date/)
+include_directories(${CMAKE_SOURCE_DIR}/third-party/sqlpp11/include/)
+include_directories(${CMAKE_SOURCE_DIR}/third-party/sqlpp11-connector-mysql/include)
 #include_directories(${CMAKE_SOURCE_DIR}/backend)
 include_directories(${CMAKE_SOURCE_DIR}/core)
 
@@ -33,6 +36,10 @@ ADD_DEFINITIONS(-DBOOST_THREAD_PROVIDES_FUTURE_WHEN_ALL_WHEN_ANY)
 ADD_DEFINITIONS(-DBOOST_THREAD_PROVIDES_FUTURE)
 ADD_DEFINITIONS(-DBOOST_THREAD_PROVIDES_FUTURE_CONTINUATION)
 
+# FindMySQL.cmake
+include(cmake/FindMySQL.cmake)
+
+#THIRD PARTIES
 # CAF
 include(ExternalProject)
 SET(CAF_BIN "${CMAKE_BINARY_DIR}/caf")
@@ -42,6 +49,16 @@ ExternalProject_Add(CAF
 	INSTALL_COMMAND ""
 	BINARY_DIR "${CAF_BIN}")
 SET(CAF_LIBS ${CAF_BIN}/lib/libcaf_core.so ${CAF_BIN}/lib/libcaf_io.so)
+
+# MySQL11
+include(ExternalProject)
+SET(MYSQLPP11_BIN "${CMAKE_BINARY_DIR}/mysqlpp11")
+ExternalProject_Add(MYSQLPP11
+	SOURCE_DIR "${CMAKE_SOURCE_DIR}/third-party/sqlpp11-connector-mysql/"
+	GIT_SUBMODULES "${CMAKE_SOURCE_DIR}/third-party/sqlpp11-connector-mysql/"
+	INSTALL_COMMAND ""
+	BINARY_DIR "${MYSQLPP11_BIN}")
+SET(MYSQLPP11_LIBS ${MYSQLPP11_BIN}/src/libsqlpp-mysql.so)
 
 # Main program
 AUX_SOURCE_DIRECTORY(apps/backend/ APP_BACKEND_SRC)
@@ -61,10 +78,16 @@ ADD_LIBRARY(portal SHARED ${PORTAL_MSRC})
 TARGET_LINK_LIBRARIES(portal core ${Boost_LIBRARIES} Qt5::Core)
 SET_TARGET_PROPERTIES(portal PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/modules)
 
+## database
+AUX_SOURCE_DIRECTORY(modules/mariadb DATABASE_MSRC)
+ADD_LIBRARY(mariadb SHARED ${DATABASE_MSRC})
+TARGET_LINK_LIBRARIES(mariadb core ${MYSQL_LIBRARY} ${MYSQLPP11_LIBS})
+SET_TARGET_PROPERTIES(mariadb PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/modules)
+
 ## storage (interacting with file system directly)
 AUX_SOURCE_DIRECTORY(modules/storage STORAGE_MSRC)
 ADD_LIBRARY(storage SHARED ${STORAGE_MSRC})
-TARGET_LINK_LIBRARIES(storage core ${Boost_LIBRARIES})
+TARGET_LINK_LIBRARIES(storage core ${Boost_LIBRARIES} ${MYSQL_LIBRARY} ${MYSQLPP11_LIBS})
 SET_TARGET_PROPERTIES(storage PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/modules)
 
 # Demo modules
@@ -78,6 +101,6 @@ ADD_LIBRARY(demo04 SHARED modules/demos/04-actor-basics.cc)
 TARGET_LINK_LIBRARIES(demo04 core ${CAF_LIBS})
 SET_TARGET_PROPERTIES(demo04 PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/modules)
 
-TARGET_LINK_LIBRARIES(draft core)
+TARGET_LINK_LIBRARIES(draft core ${MYSQLPP11_LIBS} ${MYSQL_LIBRARY})
 
 # vim: tw=0
