@@ -40,6 +40,4 @@ build/
 webroot/node_modules/
 
 modules/portal/doc/
-scripts/fstat-resp.json
-scripts/fstat.json
-scripts/response.json
+scripts/*.json
