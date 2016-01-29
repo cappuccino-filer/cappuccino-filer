@@ -4,6 +4,7 @@
 #include "decl.h"
 #include <json.h>
 #include <dirent.h>
+#include "tbl_files.h"
 
 class ReadDir {
 public:
@@ -14,6 +15,11 @@ public:
 	shared_ptree mkptree();
 
 	bool is_dir() const;
+	void sync_to_db(DatabasePtr db,
+			TabDentries&,
+			TabInodes&,
+			std::vector<std::string>& subdirs
+			);
 private:
 	ReadDir(DIR* dir, DatabasePtr db); // only create can call this
 	DatabasePtr db_;

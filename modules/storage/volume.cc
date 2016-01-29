@@ -18,7 +18,7 @@ Volume* Volume::instance()
 Volume::Volume()
 {
 	auto& db = *(DatabaseRegistry::get_db());
-	db.execute(R"(CREATE TABLE tab_volumes(
+	db.execute(R"(CREATE TABLE IF NOT EXISTS tab_volumes(
 				id int AUTO_INCREMENT PRIMARY KEY,
 				uuid char(40) NOT NULL,
 				label char(32),

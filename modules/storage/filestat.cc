@@ -47,5 +47,52 @@ shared_ptree FileStat::mkptree()
 
 bool FileStat::is_dir() const
 {
-	return !!(stat_.st_mode & S_IFDIR);
+	return S_ISDIR(stat_.st_mode);
+}
+
+bool FileStat::is_symlink() const
+{
+	return S_ISLNK(stat_.st_mode);
+}
+
+bool FileStat::is_special() const
+{
+	return !(S_ISREG(stat_.st_mode)||S_ISDIR(stat_.st_mode));
+}
+
+void FileStat::sync_to_db(DatabasePtr db, TabInodes& tbl)
+{
+	auto selold = dynamic_select(*db)
+		.dynamic_columns(all_of(tbl))
+		.dynamic_from(tbl)
+		.dynamic_where(tbl.inode == long(stat_.st_ino));
+	bool changed = true;
+	for(const auto& old : db->run(selold)) {
+		// TODO: compare mtime
+		changed = false;
+		if (old.size != stat_.st_size)
+			changed = true;
+		break;
+	}
+	qDebug() << "Checking inode " << stat_.st_ino << " changed: " << changed;
+
+	// TODO: set mtime
+	db->run(dynamic_insert_into(*db, tbl).dynamic_set(
+			tbl.inode = long(stat_.st_ino),
+			tbl.size = stat_.st_size,
+			//tbl.mtime = stat_.st_mtime,
+			tbl.ack = true
+			));
+#if 0
+	if (changed)
+		dynamic_insert_into(*db, tbl).dynamic_set(
+				tbl.hash = sqlpp::null,
+				tbl.inode = long(stat_.st_ino)
+				);
+#endif
+}
+
+uint64_t FileStat::get_inode() const
+{
+	return stat_.st_ino;
 }

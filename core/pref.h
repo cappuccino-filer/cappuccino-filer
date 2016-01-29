@@ -7,6 +7,7 @@
 #include <vector>
 #include <unordered_map>
 #include <QtCore/QLibrary> 
+#include <QtCore/QFileInfo> 
 #include <caf/all.hpp>
 #include "json.h"
 
@@ -19,7 +20,9 @@ public:
 
 	Pref();
 	void load_preference(int argc, char* argv[]);
+	void scan_modules();
 	void load_modules();
+	void load_specific_module(const std::string&);
 	void terminate_modules();
 
 	string get_log_fn() const { return fn_log_; }
@@ -32,13 +35,19 @@ public:
 	caf::actor uninstall_actor(const string& path);
 
 	shared_ptree get_registry();
+	std::string get_pref(const std::string&) const;
+	void set_registry(shared_ptree);
 private:
+	void load_single_module(QLibrary&);
+
+
 	string fn_log_;
 	string profile_;
 	string module_path_;
 	FILE* flog_;
 
 	void load_defaults();
+	std::vector<QFileInfo> libinfo_;
 	std::vector<std::unique_ptr<QLibrary>> libs_;
 	std::unordered_map<string, caf::actor> actor_table_;
 	shared_ptree reg_;

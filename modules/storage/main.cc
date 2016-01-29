@@ -14,6 +14,7 @@
 #include "filestat.h"
 #include "readdir.h"
 #include "volume.h"
+#include <launcher.h>
 
 namespace {
 
@@ -56,8 +57,18 @@ caf::behavior mklsrelay(caf::event_based_actor* self, DatabasePtr db)
 	};
 }
 
+caf::behavior mkupdatedb(caf::event_based_actor* self, DatabasePtr db)
+{
+	return { [=](shared_ptree pt)
+		{
+			return Launcher::instance()->launch("updatedb", pt);
+		},
+	};
+}
+
 const char* apipath = "/api/fstat";
 const char* lsapi = "/api/ls";
+const char* updatedbapi = "/api/updatedb";
 // TODO: readdir
 
 }
@@ -72,7 +83,10 @@ int draft_module_init()
 	caf::actor dbactor = caf::spawn(mkfstatrelay, db);
 	Pref::instance()->install_actor(apipath, dbactor);
 	Pref::instance()->install_actor(lsapi, caf::spawn(mklsrelay, db));
+	Pref::instance()->install_actor(updatedbapi, caf::spawn(mkupdatedb, db));
+
 	Volume::instance()->scan(db);
+
 	return 0;
 }
 
@@ -82,7 +96,20 @@ int draft_module_term()
 			caf::exit_reason::user_shutdown);
 	caf::anon_send_exit(Pref::instance()->uninstall_actor(lsapi),
 			caf::exit_reason::user_shutdown);
+	caf::anon_send_exit(Pref::instance()->uninstall_actor(updatedbapi),
+			caf::exit_reason::user_shutdown);
 	return 0;
 }
 
 };
+
+int storage_module_init()
+{
+	draft_module_init();
+}
+
+int storage_module_term()
+{
+	draft_module_term();
+}
+

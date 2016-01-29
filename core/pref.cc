@@ -59,7 +59,7 @@ void Pref::load_preference(int argc, char* argv[])
 	}
 }
 
-void Pref::load_modules()
+void Pref::scan_modules()
 {
 	QDir dir(cvstr(get_libpath()));
 	auto filist = dir.entryInfoList(QDir::Files|QDir::Executable, QDir::Name);
@@ -74,29 +74,47 @@ void Pref::load_modules()
 			continue;
 		auto lib = new QLibrary(fn);
 		libs_.emplace_back(lib);
+		libinfo_.emplace_back(fi);
 	} 
+}
 
-	for (auto& plib : libs_) {
-		auto& lib = *plib;
-		auto fn = lib.fileName();
-		int ret = -1;
-		auto init = (draft_module_init) (lib.resolve(MODULE_INIT_NAME));
-		auto term = (draft_module_term) (lib.resolve(MODULE_TERM_NAME));
-		if (init && term) {
-			ret = (*init)();
-		} else {
-			qDebug() << "Library " << fn
-				<< " does not have function "
-				<< MODULE_INIT_NAME
-				<< " or "
-				<< MODULE_TERM_NAME;
+void Pref::load_modules()
+{
+	scan_modules();
+	for (auto& plib : libs_)
+		load_single_module(*plib);
+}
+
+void Pref::load_specific_module(const std::string& name)
+{
+	auto match = QString::fromStdString(name);
+	for(size_t i = 0; i < libs_.size(); i++) {
+		if (libinfo_[i].baseName() == match) {
+			load_single_module(*libs_[i]);
 		}
-		if (ret < 0) {
-			qDebug() << "Unload " << fn << " since it failed to initialize";
-			lib.unload();
-		} else {
-			qDebug() << "Successfully loaded " << fn ;
-		}
+	}
+}
+
+void Pref::load_single_module(QLibrary& lib)
+{
+	auto fn = lib.fileName();
+	int ret = -1;
+	auto init = (draft_module_init) (lib.resolve(MODULE_INIT_NAME));
+	auto term = (draft_module_term) (lib.resolve(MODULE_TERM_NAME));
+	if (init && term) {
+		ret = (*init)();
+	} else {
+		qDebug() << "Library " << fn
+			<< " does not have function "
+			<< MODULE_INIT_NAME
+			<< " or "
+			<< MODULE_TERM_NAME;
+	}
+	if (ret < 0) {
+		qDebug() << "Unload " << fn << " since it failed to initialize";
+		lib.unload();
+	} else {
+		qDebug() << "Successfully loaded " << fn ;
 	}
 }
 
@@ -129,6 +147,8 @@ void Pref::load_defaults()
 {
 	module_path_ = ".";
 	flog_ = stderr;
+	reg_->put("core.toolpath", "tools/");
+	reg_->put("core.database", "mariadb");
 	reg_->put("mariadb.host", "localhost");
 	reg_->put("mariadb.user", "test");
 	reg_->put("mariadb.password", "test");
@@ -185,4 +205,14 @@ using std::string;
 shared_ptree Pref::get_registry()
 {
 	return reg_;
+}
+
+std::string Pref::get_pref(const std::string& path) const
+{
+	return reg_->get(path, "");
+}
+
+void Pref::set_registry(shared_ptree newpt)
+{
+	reg_.swap(newpt);
 }
