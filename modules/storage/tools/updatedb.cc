@@ -35,12 +35,13 @@ namespace {
 	auto tbl = TabDentries{};
 	auto itbl = TabInodes{};
 
-	void connect_sql()
+	bool connect_sql()
 	{
 		auto dbname = Pref::instance()->get_pref("core.database");
 		Pref::instance()->scan_modules();
 		Pref::instance()->load_specific_module("lib" + dbname); // Now database is avaliable at DatabaseRegistry::get_db()
 		db = DatabaseRegistry::get_db();
+		return !!db;
 	}
 
 	void scan_cwd()
@@ -80,7 +81,10 @@ int main(int argc, char* argv[])
 		base = "/boot";
 	}
 
-	connect_sql();
+	if (!connect_sql()) {
+		std::cerr << "Unable to establish connection to database, exiting\n";
+		return -1;
+	}
 	db->execute(R"xxx(CREATE TABLE IF NOT EXISTS tab_inodes (inode BIGINT PRIMARY KEY, size BIGINT NOT NULL, hash BLOB(32) NULL, mtime DATETIME NULL, last_check DATETIME NULL, ack BOOLEAN);)xxx");
 	db->execute(R"xxx(CREATE TABLE IF NOT EXISTS tab_dentries (dnode BIGINT NOT NULL, name VARCHAR(255) NOT NULL, inode BIGINT NOT NULL, ack BOOLEAN, PRIMARY KEY (dnode, name) );)xxx");
 	db->start_transaction();
