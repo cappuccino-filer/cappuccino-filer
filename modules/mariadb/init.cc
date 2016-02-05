@@ -41,11 +41,12 @@ int draft_module_init()
 	try 
 	{
 		dbptr = new mysql::connection(config);
-	}
-	catch (const sqlpp::exception&)
+	} catch (const sqlpp::exception&)
 	{
-		std::cerr << "For testing, you'll need to create a database sqlpp_mysql with a table tab_sample, as shown in "
-			"tests/TabSample.sql" << std::endl;
+		std::cerr << "For testing, you'll need to create a database called '"
+			<< config->database
+			<< "' and make it accessable by "
+			<< config->user << ":" << config->password << std::endl;
 		return -1;
 	}
 	DatabaseRegistry::register_database(dbptr);
