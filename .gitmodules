@@ -13,3 +13,6 @@
 [submodule "third-party/sqlpp11-connector-mysql"]
 	path = third-party/sqlpp11-connector-mysql
 	url = git@github.com:xinyazhang/sqlpp11-connector-mysql.git
+[submodule "third-party/angular-filemanager"]
+	path = third-party/angular-filemanager
+	url = git@github.com:xinyazhang/angular-filemanager.git
