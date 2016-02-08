@@ -6,7 +6,7 @@
 	url = https://github.com/actor-framework/actor-framework.git
 [submodule "third-party/sqlpp11"]
 	path = third-party/sqlpp11
-	url = https://github.com/rbock/sqlpp11.git
+	url = git@github.com:xinyazhang/sqlpp11.git
 [submodule "third-party/date"]
 	path = third-party/date
 	url = https://github.com/HowardHinnant/date.git
