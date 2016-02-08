@@ -79,7 +79,8 @@ void ReadDir::sync_to_db(DatabasePtr db,
 		}
 		finfo.sync_to_db(db, itbl);
 		db->run(dynamic_insert_into(*db, tbl)
-			.dynamic_set(
+			.set_or_update(
+				1,
 				tbl.inode = long(finfo.get_inode()),
 				tbl.ack = true,
 				tbl.dnode = long(dnode),

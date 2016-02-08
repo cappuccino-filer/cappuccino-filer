@@ -77,7 +77,8 @@ void FileStat::sync_to_db(DatabasePtr db, TabInodes& tbl)
 	qDebug() << "Checking inode " << stat_.st_ino << " changed: " << changed;
 
 	// TODO: set mtime
-	db->run(dynamic_insert_into(*db, tbl).dynamic_set(
+	db->run(dynamic_insert_into(*db, tbl).set_or_update(
+			1, // Skip the first one which is Primary key
 			tbl.inode = long(stat_.st_ino),
 			tbl.size = stat_.st_size,
 			//tbl.mtime = stat_.st_mtime,
