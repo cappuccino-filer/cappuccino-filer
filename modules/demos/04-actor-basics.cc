@@ -28,14 +28,14 @@ const char* apipath = "/api/demo04";
 }
 
 extern "C" {
-int draft_module_init()
+int cappuccino_filer_module_init()
 {
 	caf::actor echo = caf::spawn(mkecho);
 	Pref::instance()->install_actor(apipath, echo);
 	return 0;
 }
 
-int draft_module_term()
+int cappuccino_filer_module_term()
 {
 	caf::anon_send_exit(Pref::instance()->uninstall_actor(apipath),
 			caf::exit_reason::user_shutdown);

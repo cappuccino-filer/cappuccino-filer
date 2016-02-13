@@ -10,7 +10,7 @@
 
 extern "C" {
 
-int draft_module_init()
+int cappuccino_filer_module_init()
 {
 	/*
  	 * On load this module will access pref and output libpath preference
@@ -20,7 +20,7 @@ int draft_module_init()
 	return 0;
 }
 
-int draft_module_term()
+int cappuccino_filer_module_term()
 {
 	return 0;
 }

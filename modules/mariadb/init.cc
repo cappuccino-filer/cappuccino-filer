@@ -2,13 +2,13 @@
  * Demo 0: Basic module
  *
  * The module loader will check every shared library under specified path(s),
- * and then check the existence of entrance functions: draft_module_init and
- * draft_module_term
+ * and then check the existence of entrance functions: cappuccino_filer_module_init and
+ * cappuccino_filer_module_term
  *
- * After that the module loader will call draft_module_init. A successful
+ * After that the module loader will call cappuccino_filer_module_init. A successful
  * loaded module should return a non-negative integer.
  *
- * On program exit, the loader will call draft_module_term.
+ * On program exit, the loader will call cappuccino_filer_module_term.
  *
  */
 #include <json.h>
@@ -25,7 +25,7 @@ namespace mysql = sqlpp::mysql;
 
 extern "C" {
 
-int draft_module_init()
+int cappuccino_filer_module_init()
 {
 	auto config = std::make_shared<mysql::connection_config>();
 	auto reg = Pref::instance()->get_registry();
@@ -56,7 +56,7 @@ int draft_module_init()
 	return 0;
 }
 
-int draft_module_term()
+int cappuccino_filer_module_term()
 {
 	DatabaseRegistry::close_database();
 }

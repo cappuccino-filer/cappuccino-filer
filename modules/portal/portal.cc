@@ -100,7 +100,7 @@ int init_httpd()
 
 extern "C" {
 
-int draft_module_init()
+int cappuccino_filer_module_init()
 {
 	int ret;
 	try {
@@ -111,7 +111,7 @@ int draft_module_init()
 	return ret;
 }
 
-int draft_module_term()
+int cappuccino_filer_module_term()
 {
 	qDebug() << "Stopping HTTP server and worker thread";
 	server->stop();

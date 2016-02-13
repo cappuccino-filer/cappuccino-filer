@@ -2,8 +2,8 @@ cmake_minimum_required(VERSION 3.0)
 
 project(draft)
 include(ExternalProject)
-set (draft_VERSION_MAJOR 0)
-set (draft_VERSION_MINOR 1)
+set (cappuccino_filer_VERSION_MAJOR 0)
+set (cappuccino_filer_VERSION_MINOR 1)
 
 include_directories(${CMAKE_SOURCE_DIR}/third-party/actor-framework/libcaf_core)
 include_directories(${CMAKE_SOURCE_DIR}/third-party/actor-framework/libcaf_io)

@@ -75,7 +75,7 @@ const char* updatedbapi = "/api/updatedb";
 
 extern "C" {
 
-int draft_module_init()
+int cappuccino_filer_module_init()
 {
 	formaterror = json_mkerror("Invalid request format");
 
@@ -90,7 +90,7 @@ int draft_module_init()
 	return 0;
 }
 
-int draft_module_term()
+int cappuccino_filer_module_term()
 {
 	caf::anon_send_exit(Pref::instance()->uninstall_actor(apipath),
 			caf::exit_reason::user_shutdown);
@@ -105,11 +105,11 @@ int draft_module_term()
 
 int storage_module_init()
 {
-	draft_module_init();
+	cappuccino_filer_module_init();
 }
 
 int storage_module_term()
 {
-	draft_module_term();
+	cappuccino_filer_module_term();
 }
 

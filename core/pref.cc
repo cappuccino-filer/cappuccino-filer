@@ -99,8 +99,8 @@ void Pref::load_single_module(QLibrary& lib)
 {
 	auto fn = lib.fileName();
 	int ret = -1;
-	auto init = (draft_module_init) (lib.resolve(MODULE_INIT_NAME));
-	auto term = (draft_module_term) (lib.resolve(MODULE_TERM_NAME));
+	auto init = (cappuccino_filer_module_init) (lib.resolve(MODULE_INIT_NAME));
+	auto term = (cappuccino_filer_module_term) (lib.resolve(MODULE_TERM_NAME));
 	if (init && term) {
 		ret = (*init)();
 	} else {
@@ -126,7 +126,7 @@ void Pref::terminate_modules()
 		if (!lib.isLoaded())
 			continue;
 		qDebug() << "Stopping module " << fn;
-		auto term = (draft_module_term) (lib.resolve(MODULE_TERM_NAME));
+		auto term = (cappuccino_filer_module_term) (lib.resolve(MODULE_TERM_NAME));
 		int ret = (*term)();
 		if (ret < 0)
 			qWarning() << "Module " << fn
