@@ -2,6 +2,7 @@
 #define STORAGE_FILESTAT_H
 
 #include "decl.h"
+#include <fcntl.h>
 #include <json.h>
 #include <sys/types.h>
 #include <sys/stat.h>
