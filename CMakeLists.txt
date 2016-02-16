@@ -16,7 +16,7 @@ include_directories(${CMAKE_SOURCE_DIR}/core)
 # C++11 and Debug
 # Note: we focus on gcc/clang right now, so we uses compiler specific solutions.
 find_package(Qt5 COMPONENTS Core Widgets REQUIRED)
-set(CMAKE_CXX_FLAGS "--std=c++11 -g -ggdb3 -Wno-deprecated-declarations ${CMAKE_CXX_FLAGS} ${Qt5Widgets_EXECUTABLE_COMPILE_FLAGS}")
+set(CMAKE_CXX_FLAGS "--std=c++11 -g -ggdb3 -Wno-deprecated-declarations -Wno-deprecated ${CMAKE_CXX_FLAGS} ${Qt5Widgets_EXECUTABLE_COMPILE_FLAGS}")
 set(CMAKE_EXE_LINKER_FLAGS "-g")
 include_directories(${Qt5Core_INCLUDE_DIRS})
 
@@ -48,6 +48,7 @@ ExternalProject_Add(CAF
 	SOURCE_DIR "${CMAKE_SOURCE_DIR}/third-party/actor-framework/"
 	GIT_SUBMODULES "${CMAKE_SOURCE_DIR}/third-party/actor-framework/"
 	INSTALL_COMMAND ""
+	CMAKE_ARGS "-DCAF_NO_OPENCL=1" "-DCAF_NO_UNIT_TESTS=1" "-DCAF_NO_EXAMPLES=1" "-DCAF_NO_BENCHMARKS=1"
 	BINARY_DIR "${CAF_BIN}")
 SET(CAF_LIBS ${CAF_BIN}/lib/libcaf_core.so ${CAF_BIN}/lib/libcaf_io.so)
 
