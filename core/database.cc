@@ -2,12 +2,16 @@
 
 void DatabaseRegistry::close_database()
 {
-	db_.reset();
+	dbc_.reset();
 }
 
-DatabasePtr DatabaseRegistry::get_db()
+DbConnection DatabaseRegistry::get_shared_dbc()
 {
-	return db_;
+	if (!dbc_) {
+		dbc_ = dbc_fab_();
+	}
+	return dbc_;
 }
 
-DatabasePtr DatabaseRegistry::db_;
+DbConnection DatabaseRegistry::dbc_;
+std::function<DbConnection()> DatabaseRegistry::dbc_fab_;

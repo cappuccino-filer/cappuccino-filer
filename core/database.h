@@ -1,8 +1,8 @@
 #ifndef DATABASE_DATABASE_H
 #define DATABASE_DATABASE_H
 
+#include <functional>
 #include <memory>
-#include <sqlpp11/mysql/mysql.h>
 
 /*
  * TODO: database interface
@@ -13,17 +13,23 @@
  * Maybe this class should be moved to core
  */
 
+namespace soci {
+	class session;
+};
+
 class Pref;
 
-using DatabasePtr = std::shared_ptr<sqlpp::mysql::connection>;
+using DbConnection = std::shared_ptr<soci::session>;
 
 class DatabaseRegistry {
 public:
-	static void register_database(sqlpp::mysql::connection* db) { db_.reset(db); }
+	static void register_database(std::function<DbConnection()> fab) { dbc_fab_ = fab; }
 	static void close_database();
-	static DatabasePtr get_db();
+	static DbConnection get_shared_dbc();
+	static std::function<DbConnection()> get_dbc_fab();
 private:
-	static DatabasePtr db_;
+	static DbConnection dbc_;
+	static std::function<DbConnection()> dbc_fab_;
 };
 
 #endif

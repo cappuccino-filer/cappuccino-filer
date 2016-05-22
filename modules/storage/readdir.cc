@@ -34,9 +34,7 @@ void ReadDir::refresh()
 	ptree content;
 
 	struct dirent *presult;
-	while (!readdir_r(dir_, (dirent*)entryp_.get(), &presult)) {
-		if (!presult)
-			break;
+	while (presult = readdir(dir_)) {
 		if (presult->d_name[0] == '.') {
 			if (presult->d_name[1] == '\0')
 				continue;
@@ -64,9 +62,7 @@ void ReadDir::sync_to_db(DatabasePtr db,
 	inode_type dnode = dirstat.st_ino;
 
 	struct dirent *presult;
-	while (!readdir_r(dir_, (dirent*)entryp_.get(), &presult)) {
-		if (!presult)
-			break;
+	while (presult = readdir(dir_)) {
 		auto finfo = FileStat::create(db, dir_, presult->d_name);
 		if (finfo.is_special())
 			continue;

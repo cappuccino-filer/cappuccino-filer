@@ -14,45 +14,43 @@
 #include <json.h>
 #include <pref.h>
 #include <database.h>
+#include <soci/soci.h>
+#include <boost/format.hpp>
 #include <string>
 #include <memory>
 #include <QDebug>
-#include <sqlpp11/sqlpp11.h>
-#include <sqlpp11/mysql/mysql.h>
 
 using std::string;
-namespace mysql = sqlpp::mysql;
 
 extern "C" {
 
 int cappuccino_filer_module_init()
 {
-	auto config = std::make_shared<mysql::connection_config>();
 	auto reg = Pref::instance()->get_registry();
 	try {
-		config->user = reg->get<string>("mariadb.user");
-		config->password = reg->get<string>("mariadb.password");
-		config->database = reg->get<string>("mariadb.database");
-		config->debug = true;
+		auto user = reg->get<string>("mariadb.user");
+		auto password = reg->get<string>("mariadb.password");
+		auto database = reg->get<string>("mariadb.database");
+		auto lambda = [user,password,database] () -> DbConnection {
+			boost::format fmt("db=%1% user=%2% pass='%3%'");
+			string conf = boost::str(fmt % database % user % password);
+			return std::make_shared<soci::session>("mysql",
+					conf);
+		};
+		DatabaseRegistry::register_database(lambda);
+
+		auto dbc = DatabaseRegistry::get_shared_dbc();
+		if (reg->get<bool>("mariadb.debug", false)) {
+			*dbc << "DROP TABLE IF EXISTS tab_volumes";
+		}
 	} catch (boost::property_tree::ptree_bad_path& e) {
 		qDebug() << " Unable to access perference " << e.what();
-	}
-	mysql::connection *dbptr = nullptr;
-	try 
-	{
-		dbptr = new mysql::connection(config);
-	} catch (const sqlpp::exception&)
-	{
-		std::cerr << "For testing, you'll need to create a database called '"
-			<< config->database
-			<< "' and make it accessable by "
-			<< config->user << ":" << config->password << std::endl;
+		return -1;
+	} catch (soci::soci_error& e) {
+		qDebug() << "Error during database conection: " << e.what();
 		return -1;
 	}
-	DatabaseRegistry::register_database(dbptr);
-	if (reg->get<bool>("mariadb.debug", false)) {
-		dbptr->execute("DROP TABLE IF EXISTS tab_volumes");
-	}
+
 	return 0;
 }
 

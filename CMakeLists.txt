@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.0)
 
-project(draft)
+project(cappuccino_filer)
 include(ExternalProject)
 set (cappuccino_filer_VERSION_MAJOR 0)
 set (cappuccino_filer_VERSION_MINOR 1)
@@ -8,8 +8,9 @@ set (cappuccino_filer_VERSION_MINOR 1)
 include_directories(${CMAKE_SOURCE_DIR}/third-party/actor-framework/libcaf_core)
 include_directories(${CMAKE_SOURCE_DIR}/third-party/actor-framework/libcaf_io)
 include_directories(${CMAKE_SOURCE_DIR}/third-party/date/)
-include_directories(${CMAKE_SOURCE_DIR}/third-party/sqlpp11/include/)
-include_directories(${CMAKE_SOURCE_DIR}/third-party/sqlpp11-connector-mysql/include)
+include_directories(${CMAKE_SOURCE_DIR}/third-party/soci/include/)
+#include_directories(${CMAKE_SOURCE_DIR}/third-party/sqlpp11/include/)
+#include_directories(${CMAKE_SOURCE_DIR}/third-party/sqlpp11-connector-mysql/include)
 #include_directories(${CMAKE_SOURCE_DIR}/backend)
 include_directories(${CMAKE_SOURCE_DIR}/core)
 
@@ -52,20 +53,21 @@ ExternalProject_Add(CAF
 	BINARY_DIR "${CAF_BIN}")
 SET(CAF_LIBS ${CAF_BIN}/lib/libcaf_core.so ${CAF_BIN}/lib/libcaf_io.so)
 
-# MySQL11
+# SOCI 
 include(ExternalProject)
-SET(MYSQLPP11_BIN "${CMAKE_BINARY_DIR}/mysqlpp11")
-ExternalProject_Add(MYSQLPP11
-	SOURCE_DIR "${CMAKE_SOURCE_DIR}/third-party/sqlpp11-connector-mysql/"
-	GIT_SUBMODULES "${CMAKE_SOURCE_DIR}/third-party/sqlpp11-connector-mysql/"
+SET(SOCI_BIN "${CMAKE_BINARY_DIR}/soci")
+ExternalProject_Add(SOCI
+	SOURCE_DIR "${CMAKE_SOURCE_DIR}/third-party/soci/"
+	GIT_SUBMODULES "${CMAKE_SOURCE_DIR}/third-party/soci"
 	INSTALL_COMMAND ""
-	BINARY_DIR "${MYSQLPP11_BIN}")
-SET(MYSQLPP11_LIBS ${MYSQLPP11_BIN}/src/libsqlpp-mysql.so)
+	BINARY_DIR "${SOCI_BIN}")
+SET(SOCI_LIBS ${SOCI_BIN}/lib/libsoci_core.so ${SOCI_BIN}/lib/libsoci_mysql.so)
+include_directories(${SOCI_BIN}/include/)
 
 # Main program
 AUX_SOURCE_DIRECTORY(apps/backend/ APP_BACKEND_SRC)
-ADD_EXECUTABLE(draft ${APP_BACKEND_SRC})
-QT5_USE_MODULES(draft Core)
+ADD_EXECUTABLE(cappuccino-filer ${APP_BACKEND_SRC})
+QT5_USE_MODULES(cappuccino-filer Core)
 
 # Core library
 AUX_SOURCE_DIRECTORY(core CORE_MSRC)
@@ -83,16 +85,17 @@ SET_TARGET_PROPERTIES(portal PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_
 ## database
 AUX_SOURCE_DIRECTORY(modules/mariadb DATABASE_MSRC)
 ADD_LIBRARY(mariadb SHARED ${DATABASE_MSRC})
-TARGET_LINK_LIBRARIES(mariadb core ${MYSQL_LIBRARY} ${MYSQLPP11_LIBS})
+ADD_DEPENDENCIES(mariadb SOCI)
+TARGET_LINK_LIBRARIES(mariadb core ${MYSQL_LIBRARY} ${SOCI_LIBS})
 SET_TARGET_PROPERTIES(mariadb PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/modules)
 
 ## storage (interacting with file system directly)
-AUX_SOURCE_DIRECTORY(modules/storage STORAGE_MSRC)
-ADD_LIBRARY(storage SHARED ${STORAGE_MSRC})
-TARGET_LINK_LIBRARIES(storage core ${Boost_LIBRARIES} ${MYSQL_LIBRARY} ${MYSQLPP11_LIBS})
-SET_TARGET_PROPERTIES(storage PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/modules)
-AUX_SOURCE_DIRECTORY(modules/storage/tools UPDATEDB_SRC)
-ADD_EXECUTABLE(updatedb ${UPDATEDB_SRC})
+#AUX_SOURCE_DIRECTORY(modules/storage STORAGE_MSRC)
+#ADD_LIBRARY(storage SHARED ${STORAGE_MSRC})
+#TARGET_LINK_LIBRARIES(storage core ${Boost_LIBRARIES} ${MYSQL_LIBRARY} ${MYSQLPP11_LIBS})
+#SET_TARGET_PROPERTIES(storage PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/modules)
+#AUX_SOURCE_DIRECTORY(modules/storage/tools UPDATEDB_SRC)
+#ADD_EXECUTABLE(updatedb ${UPDATEDB_SRC})
 
 # Demo modules
 ADD_LIBRARY(00-stub SHARED modules/demos/00-stub-module.cc)
@@ -105,7 +108,7 @@ ADD_LIBRARY(demo04 SHARED modules/demos/04-actor-basics.cc)
 TARGET_LINK_LIBRARIES(demo04 core ${CAF_LIBS})
 SET_TARGET_PROPERTIES(demo04 PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/modules)
 
-TARGET_LINK_LIBRARIES(draft core ${MYSQLPP11_LIBS} ${MYSQL_LIBRARY})
-TARGET_LINK_LIBRARIES(updatedb core storage ${MYSQLPP11_LIBS} ${MYSQL_LIBRARY})
+TARGET_LINK_LIBRARIES(cappuccino-filer core ${MYSQLPP11_LIBS} ${MYSQL_LIBRARY})
+#TARGET_LINK_LIBRARIES(updatedb core storage ${MYSQLPP11_LIBS} ${MYSQL_LIBRARY})
 
 # vim: tw=0
