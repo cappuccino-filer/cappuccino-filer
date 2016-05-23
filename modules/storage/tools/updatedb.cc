@@ -11,7 +11,7 @@
 #include <database.h>
 #include <dirent.h>
 #include "../init.h"
-#include "../readdir.h"
+#include <QDebug>
 #include "../syncer.h"
 #include <soci/soci.h>
 
@@ -66,6 +66,7 @@ namespace {
 int main(int argc, char* argv[])
 {
 	std::string base;
+	int volid = -1;
 	// If started from console, then assuming it's debugging.
 	if (!isatty(fileno(stdin))) {
 		init_pref();
@@ -85,12 +86,47 @@ int main(int argc, char* argv[])
 		return -1;
 	}
 
-	db->begin();
-	*db << R"xxx(CREATE TABLE IF NOT EXISTS vol_0_inode_table (inode BIGINT PRIMARY KEY, size BIGINT NOT NULL, hash BLOB(32) NULL, mtime_sec BIGINT NULL, mtime_nsec BIGINT NULL, last_check DATETIME NULL, ack BOOLEAN);)xxx";
-	*db << R"xxx(CREATE TABLE IF NOT EXISTS vol_0_dentry_table (dnode BIGINT NOT NULL, name VARCHAR(255) NOT NULL, inode BIGINT NOT NULL, ack BOOLEAN, PRIMARY KEY (dnode, name) );)xxx";
-	db->commit();
+	struct stat objstat;
+	::lstat(base.c_str(), &objstat);
 
-	syncer = std::make_unique<Syncer>(db, 0);
+	soci::transaction tr1(*db);
+	soci::rowset<soci::row> mpoints = (db->prepare << "SELECT mount, trID from volumes_table,tracking_table WHERE volumes_table.uuid = tracking_table.uuid;");
+	for(auto& row : mpoints) {
+		auto mp = row.get<string>(0);
+		auto id = row.get<int>(1);
+		struct stat matchingstat;
+		::lstat(mp.c_str(), &matchingstat);
+		if (matchingstat.st_dev == objstat.st_dev)
+			volid = id;
+	}
+	if (volid < 0) {
+		soci::rowset<soci::row>  mpoints = (db->prepare << "SELECT mount,uuid from volumes_table;");
+		for(auto& row : mpoints) {
+			auto mp = row.get<string>(0);
+			auto uuid = row.get<string>(1);
+			struct stat matchingstat;
+			::lstat(mp.c_str(), &matchingstat);
+			if (matchingstat.st_dev == objstat.st_dev) {
+				*db << "INSERT INTO tracking_table(uuid) VALUES(:1)", soci::use(uuid);
+				*db << "SELECT LAST_INSERT_ID();", soci::into(volid);
+			}
+		}
+	}
+	qDebug() << "Scanning Vol " << volid;
+	tr1.commit();
+
+	soci::transaction tr2(*db);
+	string stmt("CREATE TABLE IF NOT EXISTS vol_");
+	stmt += std::to_string(volid);
+	stmt += "_inode_table (inode BIGINT PRIMARY KEY, size BIGINT NOT NULL, hash BLOB(32) NULL, mtime_sec BIGINT NULL, mtime_nsec BIGINT NULL, last_check DATETIME NULL, ack BOOLEAN);";
+	*db << stmt;
+	stmt = "CREATE TABLE IF NOT EXISTS vol_";
+	stmt += std::to_string(volid);
+	stmt += "_dentry_table (dnode BIGINT NOT NULL, name VARCHAR(255) NOT NULL, inode BIGINT NOT NULL, ack BOOLEAN, PRIMARY KEY (dnode, name) );";
+	*db << stmt;
+	tr2.commit();
+
+	syncer = std::make_unique<Syncer>(db, volid);
 	db->begin();
 	*db << R"(UPDATE vol_0_dentry_table SET ack = false;)";
 	*db << R"(UPDATE vol_0_inode_table SET ack = false;)";

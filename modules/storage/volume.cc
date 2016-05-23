@@ -23,9 +23,12 @@ Volume::Volume()
 	db << R"(CREATE TABLE IF NOT EXISTS volumes_table(
 				uuid char(40) PRIMARY KEY,
 				label char(32),
-				mount text,
-				TrID INT NULL,
-				last_check datetime
+				mount text
+			);)";
+	db << R"(CREATE TABLE IF NOT EXISTS tracking_table(
+				trID int PRIMARY KEY AUTO_INCREMENT,
+				uuid char(40),
+				FOREIGN KEY(uuid) REFERENCES volumes_table(uuid)
 			);)";
 	tr.commit();
 }
@@ -54,7 +57,7 @@ void Volume::scan(DbConnection dbc)
 		if (mp[0] != '/')
 			continue;
 		try {
-			*dbc << "INSERT INTO volumes_table(uuid, label, mount) VALUES(:1, :2, :3) ON DUPLICATE KEY UPDATE mount=mount",
+			*dbc << "INSERT INTO volumes_table(uuid, label, mount) VALUES(:1, :2, :3) ON DUPLICATE KEY UPDATE mount=VALUES(mount)",
 				use(sub.get("uuid", "failed")),
 				use(sub.get("label", "")),
 				use(mp);

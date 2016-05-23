@@ -61,6 +61,8 @@ caf::behavior mkupdatedb(caf::event_based_actor* self, DbConnection db)
 {
 	return { [=](shared_ptree pt)
 		{
+			// Sync to latest status
+			Volume::instance()->scan(db);
 			return Launcher::instance()->launch("updatedb", pt);
 		},
 	};
