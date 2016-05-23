@@ -4,9 +4,6 @@
 [submodule "third-party/actor-framework"]
 	path = third-party/actor-framework
 	url = https://github.com/actor-framework/actor-framework.git
-[submodule "third-party/date"]
-	path = third-party/date
-	url = https://github.com/HowardHinnant/date.git
 [submodule "third-party/angular-filemanager"]
 	path = third-party/angular-filemanager
 	url = git@github.com:xinyazhang/angular-filemanager.git
