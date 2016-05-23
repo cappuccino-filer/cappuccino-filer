@@ -149,6 +149,7 @@ void Pref::load_defaults()
 	flog_ = stderr;
 	reg_->put("core.toolpath", "tools/");
 	reg_->put("core.database", "mariadb");
+	reg_->put("core.libpath", "./modules");
 	reg_->put("mariadb.host", "localhost");
 	reg_->put("mariadb.user", "test");
 	reg_->put("mariadb.password", "test");
@@ -158,6 +159,7 @@ void Pref::load_defaults()
 	reg_->put("mariadb.client_flag", 0);
 	// CAVEAT: REMOVE THIS IF RELEASED
 	reg_->put("mariadb.debug", true);
+	reg_->put("portal.webroot", "../webroot");
 }
 
 Pref* Pref::instance()
@@ -168,12 +170,12 @@ Pref* Pref::instance()
 
 std::string Pref::get_libpath() const
 {
-	return std::string("./modules");
+	return get_pref("core.libpath");
 }
 
 std::string Pref::get_webroot() const
 {
-	return std::string("../webroot");
+	return get_pref("portal.webroot");
 }
 
 void Pref::install_actor(const std::string& path, caf::actor actor)
