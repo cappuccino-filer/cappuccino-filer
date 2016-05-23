@@ -9,7 +9,7 @@ public:
 	Volume();
 
 	static Volume* instance();
-	void scan(DatabasePtr);
+	void scan(DbConnection);
 private:
 };
 

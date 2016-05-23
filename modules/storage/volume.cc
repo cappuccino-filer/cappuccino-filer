@@ -6,8 +6,9 @@
 #include <json.h>
 #include <QDebug>
 #include <QtCore/QProcess>
+#include <soci/soci.h>
 
-#include "tbl_volumes.h"
+using soci::use;
 
 Volume* Volume::instance()
 {
@@ -17,17 +18,19 @@ Volume* Volume::instance()
 
 Volume::Volume()
 {
-	auto& db = *(DatabaseRegistry::get_db());
-	db.execute(R"(CREATE TABLE IF NOT EXISTS tab_volumes(
-				id int AUTO_INCREMENT PRIMARY KEY,
-				uuid char(40) NOT NULL,
+	auto& db = *(DatabaseRegistry::get_shared_dbc());
+	soci::transaction tr(db);
+	db << R"(CREATE TABLE IF NOT EXISTS volumes_table(
+				uuid char(40) PRIMARY KEY,
 				label char(32),
 				mount text,
+				TrID INT NULL,
 				last_check datetime
-			))");
+			);)";
+	tr.commit();
 }
 
-void Volume::scan(DatabasePtr dbc)
+void Volume::scan(DbConnection dbc)
 {
 	qDebug() << "Volume::scan " << dbc.get() ;
 	QProcess lsblk;
@@ -43,9 +46,7 @@ void Volume::scan(DatabasePtr dbc)
 	ptree pt;
 	boost::property_tree::read_json(ss, pt);
 
-	//auto& db = *dbc;
-	const auto tblvol = tab_volumes::tab_volumes{};
-
+	soci::transaction tr(*dbc);
 	BOOST_FOREACH(ptree::value_type &iter, pt.get_child("blockdevices")) {
 		auto& sub = iter.second;
 		qDebug() << "lsblk item:" << sub.get<std::string>("uuid", "failed").c_str();
@@ -53,12 +54,13 @@ void Volume::scan(DatabasePtr dbc)
 		if (mp[0] != '/')
 			continue;
 		try {
-			dbc->run(insert_into(tblvol).set(tblvol.uuid = sub.get("uuid", "failed"),
-					tblvol.label = sub.get("label", ""),
-					tblvol.mount = mp
-					));
+			*dbc << "INSERT INTO volumes_table(uuid, label, mount) VALUES(:1, :2, :3) ON DUPLICATE KEY UPDATE mount=mount",
+				use(sub.get("uuid", "failed")),
+				use(sub.get("label", "")),
+				use(mp);
 		} catch (...) {
 			qWarning() << "Exception thrown during inserting ";
 		}
 	}
+	tr.commit();
 }

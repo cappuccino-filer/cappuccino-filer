@@ -20,7 +20,7 @@ namespace {
 
 shared_ptree formaterror;
 
-caf::behavior mkfstatrelay(caf::event_based_actor* self, DatabasePtr db)
+caf::behavior mkfstatrelay(caf::event_based_actor* self, DbConnection db)
 {
 	return { [=](shared_ptree pt)
 		{
@@ -38,7 +38,7 @@ caf::behavior mkfstatrelay(caf::event_based_actor* self, DatabasePtr db)
 	};
 }
 
-caf::behavior mklsrelay(caf::event_based_actor* self, DatabasePtr db)
+caf::behavior mklsrelay(caf::event_based_actor* self, DbConnection db)
 {
 	return { [=](shared_ptree pt)
 		{
@@ -57,7 +57,7 @@ caf::behavior mklsrelay(caf::event_based_actor* self, DatabasePtr db)
 	};
 }
 
-caf::behavior mkupdatedb(caf::event_based_actor* self, DatabasePtr db)
+caf::behavior mkupdatedb(caf::event_based_actor* self, DbConnection db)
 {
 	return { [=](shared_ptree pt)
 		{
@@ -79,7 +79,7 @@ int cappuccino_filer_module_init()
 {
 	formaterror = json_mkerror("Invalid request format");
 
-	auto db = DatabaseRegistry::get_db();
+	auto db = DatabaseRegistry::get_shared_dbc();
 	caf::actor dbactor = caf::spawn(mkfstatrelay, db);
 	Pref::instance()->install_actor(apipath, dbactor);
 	Pref::instance()->install_actor(lsapi, caf::spawn(mklsrelay, db));

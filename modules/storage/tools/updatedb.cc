@@ -12,7 +12,8 @@
 #include <dirent.h>
 #include "../init.h"
 #include "../readdir.h"
-#include "../tbl_files.h"
+#include "../syncer.h"
+#include <soci/soci.h>
 
 namespace {
 
@@ -31,24 +32,22 @@ namespace {
 		return pt_req;
 	}
 
-	DatabasePtr db;
-	auto tbl = TabDentries{};
-	auto itbl = TabInodes{};
+	DbConnection db;
+	std::unique_ptr<Syncer> syncer;
 
 	bool connect_sql()
 	{
 		auto dbname = Pref::instance()->get_pref("core.database");
 		Pref::instance()->scan_modules();
 		Pref::instance()->load_specific_module("lib" + dbname); // Now database is avaliable at DatabaseRegistry::get_db()
-		db = DatabaseRegistry::get_db();
+		db = DatabaseRegistry::get_shared_dbc();
 		return !!db;
 	}
 
 	void scan_cwd()
 	{
 		std::vector<std::string> subdirs;
-		auto dir = ReadDir::create(db, ".");
-		dir->sync_to_db(db, tbl, itbl, subdirs);
+		syncer->sync_cwd(subdirs);
 		for (const auto& subdirname : subdirs) {
 			if (!::chdir(subdirname.c_str())) {
 				scan_cwd();
@@ -85,15 +84,20 @@ int main(int argc, char* argv[])
 		std::cerr << "Unable to establish connection to database, exiting\n";
 		return -1;
 	}
-	db->execute(R"xxx(CREATE TABLE IF NOT EXISTS tab_inodes (inode BIGINT PRIMARY KEY, size BIGINT NOT NULL, hash BLOB(32) NULL, mtime DATETIME NULL, last_check DATETIME NULL, ack BOOLEAN);)xxx");
-	db->execute(R"xxx(CREATE TABLE IF NOT EXISTS tab_dentries (dnode BIGINT NOT NULL, name VARCHAR(255) NOT NULL, inode BIGINT NOT NULL, ack BOOLEAN, PRIMARY KEY (dnode, name) );)xxx");
-	db->start_transaction();
-	db->execute(R"(UPDATE tab_inodes SET ack = false;)");
-	db->execute(R"(UPDATE tab_dentries SET ack = false;)");
+
+	db->begin();
+	*db << R"xxx(CREATE TABLE IF NOT EXISTS vol_0_inode_table (inode BIGINT PRIMARY KEY, size BIGINT NOT NULL, hash BLOB(32) NULL, mtime_sec BIGINT NULL, mtime_nsec BIGINT NULL, last_check DATETIME NULL, ack BOOLEAN);)xxx";
+	*db << R"xxx(CREATE TABLE IF NOT EXISTS vol_0_dentry_table (dnode BIGINT NOT NULL, name VARCHAR(255) NOT NULL, inode BIGINT NOT NULL, ack BOOLEAN, PRIMARY KEY (dnode, name) );)xxx";
+	db->commit();
+
+	syncer = std::make_unique<Syncer>(db, 0);
+	db->begin();
+	*db << R"(UPDATE vol_0_dentry_table SET ack = false;)";
+	*db << R"(UPDATE vol_0_inode_table SET ack = false;)";
 	scan_main(base);
-	db->execute(R"(DELETE FROM tab_inodes WHERE ack = false;)");
-	db->execute(R"(DELETE FROM tab_dentries WHERE ack = false;)");
-	db->commit_transaction();
+	*db << R"(DELETE FROM vol_0_dentry_table WHERE ack = false;)";
+	*db << R"(DELETE FROM vol_0_inode_table WHERE ack = false;)";
+	db->commit();
 
 	return 0;
 }

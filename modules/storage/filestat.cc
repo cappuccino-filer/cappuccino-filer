@@ -7,7 +7,7 @@ FileStat::FileStat()
 {
 }
 
-FileStat FileStat::create(DatabasePtr, const string& path)
+FileStat FileStat::create(DbConnection, const string& path)
 {
 	FileStat ret;
 	int c = ::lstat(path.c_str(), &ret.stat_);
@@ -17,7 +17,7 @@ FileStat FileStat::create(DatabasePtr, const string& path)
 	return ret;
 }
 
-FileStat FileStat::create(DatabasePtr, DIR* dir, const string& path)
+FileStat FileStat::create(DbConnection, DIR* dir, const string& path)
 {
 	FileStat ret;
 	int c = ::fstatat(dirfd(dir),
@@ -60,7 +60,8 @@ bool FileStat::is_special() const
 	return !(S_ISREG(stat_.st_mode)||S_ISDIR(stat_.st_mode));
 }
 
-void FileStat::sync_to_db(DatabasePtr db, TabInodes& tbl)
+#if 0
+void FileStat::sync_to_db(DbConnection db, TabInodes& tbl)
 {
 	auto selold = dynamic_select(*db)
 		.dynamic_columns(all_of(tbl))
@@ -92,6 +93,7 @@ void FileStat::sync_to_db(DatabasePtr db, TabInodes& tbl)
 				);
 #endif
 }
+#endif
 
 uint64_t FileStat::get_inode() const
 {

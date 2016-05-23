@@ -17,7 +17,7 @@ include_directories(${CMAKE_SOURCE_DIR}/core)
 # C++11 and Debug
 # Note: we focus on gcc/clang right now, so we uses compiler specific solutions.
 find_package(Qt5 COMPONENTS Core Widgets REQUIRED)
-set(CMAKE_CXX_FLAGS "--std=c++11 -g -ggdb3 -Wno-deprecated-declarations -Wno-deprecated ${CMAKE_CXX_FLAGS} ${Qt5Widgets_EXECUTABLE_COMPILE_FLAGS}")
+set(CMAKE_CXX_FLAGS "--std=c++14 -g -ggdb3 -Wno-deprecated-declarations -Wno-deprecated ${CMAKE_CXX_FLAGS} ${Qt5Widgets_EXECUTABLE_COMPILE_FLAGS}")
 set(CMAKE_EXE_LINKER_FLAGS "-g")
 include_directories(${Qt5Core_INCLUDE_DIRS})
 
@@ -89,13 +89,13 @@ ADD_DEPENDENCIES(mariadb SOCI)
 TARGET_LINK_LIBRARIES(mariadb core ${MYSQL_LIBRARY} ${SOCI_LIBS})
 SET_TARGET_PROPERTIES(mariadb PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/modules)
 
-## storage (interacting with file system directly)
-#AUX_SOURCE_DIRECTORY(modules/storage STORAGE_MSRC)
-#ADD_LIBRARY(storage SHARED ${STORAGE_MSRC})
-#TARGET_LINK_LIBRARIES(storage core ${Boost_LIBRARIES} ${MYSQL_LIBRARY} ${MYSQLPP11_LIBS})
-#SET_TARGET_PROPERTIES(storage PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/modules)
-#AUX_SOURCE_DIRECTORY(modules/storage/tools UPDATEDB_SRC)
-#ADD_EXECUTABLE(updatedb ${UPDATEDB_SRC})
+# storage (interacting with file system directly)
+AUX_SOURCE_DIRECTORY(modules/storage STORAGE_MSRC)
+ADD_LIBRARY(storage SHARED ${STORAGE_MSRC})
+TARGET_LINK_LIBRARIES(storage core ${Boost_LIBRARIES} ${MYSQL_LIBRARY} ${SOCI_LIBS})
+SET_TARGET_PROPERTIES(storage PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/modules)
+AUX_SOURCE_DIRECTORY(modules/storage/tools UPDATEDB_SRC)
+ADD_EXECUTABLE(updatedb ${UPDATEDB_SRC})
 
 # Demo modules
 ADD_LIBRARY(00-stub SHARED modules/demos/00-stub-module.cc)
@@ -109,6 +109,6 @@ TARGET_LINK_LIBRARIES(demo04 core ${CAF_LIBS})
 SET_TARGET_PROPERTIES(demo04 PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/modules)
 
 TARGET_LINK_LIBRARIES(cappuccino-filer core ${MYSQLPP11_LIBS} ${MYSQL_LIBRARY})
-#TARGET_LINK_LIBRARIES(updatedb core storage ${MYSQLPP11_LIBS} ${MYSQL_LIBRARY})
+TARGET_LINK_LIBRARIES(updatedb core storage ${MYSQLPP11_LIBS} ${MYSQL_LIBRARY})
 
 # vim: tw=0

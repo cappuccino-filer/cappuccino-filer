@@ -8,7 +8,7 @@ ReadDir::~ReadDir()
 	::closedir(dir_);
 }
 
-ReadDir::ReadDir(DIR* dir, DatabasePtr db)
+ReadDir::ReadDir(DIR* dir, DbConnection db)
 	:dir_(dir), db_(db)
 {
 	int name_max = fpathconf(dirfd(dir), _PC_NAME_MAX);
@@ -18,7 +18,7 @@ ReadDir::ReadDir(DIR* dir, DatabasePtr db)
 	entryp_.reset(new char[dentsize]);
 }
 
-std::unique_ptr<ReadDir> ReadDir::create(DatabasePtr db, const string& path)
+std::unique_ptr<ReadDir> ReadDir::create(DbConnection db, const string& path)
 {
 	DIR* dir = ::opendir(path.c_str());
 	if (!dir)
@@ -34,7 +34,7 @@ void ReadDir::refresh()
 	ptree content;
 
 	struct dirent *presult;
-	while (presult = readdir(dir_)) {
+	while (presult = ::readdir(dir_)) {
 		if (presult->d_name[0] == '.') {
 			if (presult->d_name[1] == '\0')
 				continue;
@@ -50,9 +50,9 @@ void ReadDir::refresh()
 	cache_->add_child("content", content);
 }
 
-void ReadDir::sync_to_db(DatabasePtr db,
-		TabDentries& tbl,
-		TabInodes& itbl,
+#if 0
+void ReadDir::sync_to_db(DbConnection db,
+		Syncer& syncer,
 		std::vector<std::string>& subdirs
 		)
 {
@@ -61,8 +61,7 @@ void ReadDir::sync_to_db(DatabasePtr db,
 	::fstat(dirfd(dir_), &dirstat);
 	inode_type dnode = dirstat.st_ino;
 
-	struct dirent *presult;
-	while (presult = readdir(dir_)) {
+	while (presult = ::readdir(dir_)) {
 		auto finfo = FileStat::create(db, dir_, presult->d_name);
 		if (finfo.is_special())
 			continue;
@@ -86,6 +85,7 @@ void ReadDir::sync_to_db(DatabasePtr db,
 			subdirs.emplace_back(presult->d_name);
 	}
 }
+#endif
 
 shared_ptree ReadDir::mkptree()
 {
