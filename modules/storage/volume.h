@@ -2,6 +2,7 @@
 #define STORAGE_VOLUME_H
 
 #include <database.h>
+#include <json.h>
 class Pref;
 
 class Volume {
@@ -10,6 +11,8 @@ public:
 
 	static Volume* instance();
 	void scan(DbConnection);
+	shared_ptree ls_volumes();
+	shared_ptree handle_request(shared_ptree);
 private:
 };
 

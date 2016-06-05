@@ -49,7 +49,7 @@ namespace {
 				write_json(jsonstream, *reply, false);
 				string jsonstr = jsonstream.str();
 
-				string status = "201 Created";
+				string status = "200 OK";
 				map<string, string> header_info = {
 					{ "Content-Length", to_string(jsonstr.size()) }
 				};
@@ -66,14 +66,20 @@ namespace {
 
 	boost::future<int> http_api(HttpServer::ResponsePtr response, shared_ptr<HttpServer::Request> request)
 	{
+		qDebug() << request->method.c_str() << " on " << request->path.c_str();
 		auto pt = std::make_shared<boost::property_tree::ptree>();
-		boost::property_tree::read_json(request->content, *pt);
+		try {
+			boost::property_tree::read_json(request->content, *pt);
+		} catch (...) {
+		}
+		pt->put("method", request->method);
 		try {
 			auto path = portal::canonicalize_get_url(request);
 			auto handler = Pref::instance()->match_actor(request->path);
 			response->promise = boost::promise<int>();
 			auto fut = response->promise.get_future();
 			auto rep_actor = caf::spawn(reply_json, request, response);
+			qDebug() << "Deliver request to actor " << &rep_actor;
 			send_as(rep_actor, handler, pt);
 			return fut;
 		} catch (int n) {
@@ -88,6 +94,7 @@ int init_httpd()
 	server = new HttpServer(8080, 1);
 	server->default_resource["GET"]  = http_file_fetch;
 	server->resource["^/api/.*"]["POST"] = http_api;
+	server->resource["^/api/.*"]["GET"] = http_api;
 	auto pserver = server;
 	qDebug() << "Creating HTTP worker thread with server " << server;
 	server_thread = new thread([pserver](){

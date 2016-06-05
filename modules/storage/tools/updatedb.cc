@@ -89,6 +89,10 @@ int main(int argc, char* argv[])
 	struct stat objstat;
 	::lstat(base.c_str(), &objstat);
 
+	/*
+ 	 * Locate the tracking ID, which identifies the table we need to
+ 	 * update
+	 */
 	soci::transaction tr1(*db);
 	soci::rowset<soci::row> mpoints = (db->prepare << "SELECT mount, trID from volumes_table,tracking_table WHERE volumes_table.uuid = tracking_table.uuid;");
 	for(auto& row : mpoints) {
@@ -99,6 +103,9 @@ int main(int argc, char* argv[])
 		if (matchingstat.st_dev == objstat.st_dev)
 			volid = id;
 	}
+	/*
+ 	 * Insert row to tracking table, which generates a new tracking ID.
+ 	 */
 	if (volid < 0) {
 		soci::rowset<soci::row>  mpoints = (db->prepare << "SELECT mount,uuid from volumes_table;");
 		for(auto& row : mpoints) {
@@ -115,6 +122,9 @@ int main(int argc, char* argv[])
 	qDebug() << "Scanning Vol " << volid;
 	tr1.commit();
 
+	/*
+ 	 * Create table if not exists.
+	 */
 	soci::transaction tr2(*db);
 	string stmt("CREATE TABLE IF NOT EXISTS vol_");
 	stmt += std::to_string(volid);
@@ -128,11 +138,11 @@ int main(int argc, char* argv[])
 
 	syncer = std::make_unique<Syncer>(db, volid);
 	db->begin();
-	*db << R"(UPDATE vol_0_dentry_table SET ack = false;)";
-	*db << R"(UPDATE vol_0_inode_table SET ack = false;)";
+	*db << "UPDATE vol_" + std::to_string(volid) + "_dentry_table SET ack = false;";
+	*db << "UPDATE vol_" + std::to_string(volid) + "_inode_table SET ack = false;";
 	scan_main(base);
-	*db << R"(DELETE FROM vol_0_dentry_table WHERE ack = false;)";
-	*db << R"(DELETE FROM vol_0_inode_table WHERE ack = false;)";
+	*db << "DELETE FROM vol_" + std::to_string(volid) + "_dentry_table WHERE ack = false;";
+	*db << "DELETE FROM vol_" + std::to_string(volid) + "_inode_table WHERE ack = false;";
 	db->commit();
 
 	return 0;

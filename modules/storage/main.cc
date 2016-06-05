@@ -15,6 +15,7 @@
 #include "readdir.h"
 #include "volume.h"
 #include <launcher.h>
+#include <QDebug>
 
 namespace {
 
@@ -68,9 +69,23 @@ caf::behavior mkupdatedb(caf::event_based_actor* self, DbConnection db)
 	};
 }
 
+caf::behavior mkvolume(caf::event_based_actor* self)
+{
+	return { [=](shared_ptree pt)
+		{
+			qDebug() << "method: " << pt->get("method", "").c_str();
+			if (pt->get("method", "") == "GET") {
+				return Volume::instance()->ls_volumes();
+			}
+			return Volume::instance()->handle_request(pt);
+		}
+	};
+}
+
 const char* apipath = "/api/fstat";
 const char* lsapi = "/api/ls";
 const char* updatedbapi = "/api/updatedb";
+const char* volumeapi = "/api/volume";
 // TODO: readdir
 
 }
@@ -86,6 +101,7 @@ int cappuccino_filer_module_init()
 	Pref::instance()->install_actor(apipath, dbactor);
 	Pref::instance()->install_actor(lsapi, caf::spawn(mklsrelay, db));
 	Pref::instance()->install_actor(updatedbapi, caf::spawn(mkupdatedb, db));
+	Pref::instance()->install_actor(volumeapi, caf::spawn(mkvolume));
 
 	Volume::instance()->scan(db);
 
@@ -99,6 +115,8 @@ int cappuccino_filer_module_term()
 	caf::anon_send_exit(Pref::instance()->uninstall_actor(lsapi),
 			caf::exit_reason::user_shutdown);
 	caf::anon_send_exit(Pref::instance()->uninstall_actor(updatedbapi),
+			caf::exit_reason::user_shutdown);
+	caf::anon_send_exit(Pref::instance()->uninstall_actor(volumeapi),
 			caf::exit_reason::user_shutdown);
 	return 0;
 }
