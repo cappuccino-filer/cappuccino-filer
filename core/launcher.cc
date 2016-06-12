@@ -31,7 +31,12 @@ shared_ptree Launcher::list_all() const
 {
 	auto ret = std::make_shared<ptree>();
 	for(const auto& item : flying_) {
-		ret->put(std::to_string(item.first), item.second);
+		ptree process;
+		process.put("PID", std::to_string(item.second->processId()));
+		process.put("program", item.second->program().toStdString());
+		// FIXME: add program arguments
+		
+		ret->add_child(std::to_string(item.first), process);
 	}
 	return ret;
 }

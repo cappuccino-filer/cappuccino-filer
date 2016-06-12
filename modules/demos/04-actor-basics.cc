@@ -3,20 +3,18 @@
  *
  * The implementation of an API should be an actor, and installed by calling
  * Pref::install_actor(). This actor should accept message of
- * std::shared_ptr<boost::property_tree::ptree>.
+ * shared_ptree
  */
 
 #include <pref.h>
-#define BOOST_SPIRIT_THREADSAFE
-#include <boost/property_tree/json_parser.hpp>
-#include <boost/property_tree/ptree.hpp>
+#include <json.h>
 
 
 namespace {
 
 caf::behavior mkecho(caf::event_based_actor* self)
 {
-	return { [](std::shared_ptr<boost::property_tree::ptree> pt)
+	return { [](shared_ptree pt)
 		{
 			return pt;
 		}

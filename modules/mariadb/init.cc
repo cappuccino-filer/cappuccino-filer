@@ -11,7 +11,6 @@
  * On program exit, the loader will call cappuccino_filer_module_term.
  *
  */
-#include <json.h>
 #include <pref.h>
 #include <database.h>
 #include <soci/soci.h>

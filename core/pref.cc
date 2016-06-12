@@ -61,6 +61,7 @@ void Pref::load_preference(int argc, char* argv[])
 
 void Pref::scan_modules()
 {
+	qDebug() << "Scan " << get_libpath() << " for modules ";
 	QDir dir(cvstr(get_libpath()));
 	auto filist = dir.entryInfoList(QDir::Files|QDir::Executable, QDir::Name);
 	for(auto fi : filist) {

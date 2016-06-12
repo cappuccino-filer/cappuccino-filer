@@ -35,8 +35,6 @@ namespace {
 		return mkpromise(0).get_future();
 	}
 
-	using boost::property_tree::write_json;
-
 	caf::behavior reply_json(
 			caf::event_based_actor* self,
 			shared_ptr<HttpServer::Request> request,
@@ -45,9 +43,8 @@ namespace {
 	{
 		return { [=] (const shared_ptree reply) 
 			{
-				stringstream jsonstream;
-				write_json(jsonstream, *reply, false);
-				string jsonstr = jsonstream.str();
+				string jsonstr;
+				json_write_to_string(reply, jsonstr);
 
 				string status = "200 OK";
 				map<string, string> header_info = {
@@ -67,9 +64,9 @@ namespace {
 	boost::future<int> http_api(HttpServer::ResponsePtr response, shared_ptr<HttpServer::Request> request)
 	{
 		qDebug() << request->method.c_str() << " on " << request->path.c_str();
-		auto pt = std::make_shared<boost::property_tree::ptree>();
+		auto pt = create_ptree();
 		try {
-			boost::property_tree::read_json(request->content, *pt);
+			json_read_from_stream(request->content, *pt);
 		} catch (...) {
 		}
 		pt->put("method", request->method);

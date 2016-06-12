@@ -49,7 +49,7 @@ void Volume::scan(DbConnection dbc)
 	//qDebug() << "lsblk output:" << all;
 	std::stringstream ss(all.toStdString());
 	ptree pt;
-	boost::property_tree::read_json(ss, pt);
+	json_read_from_stream(ss, pt);
 
 	soci::transaction tr(*dbc);
 	BOOST_FOREACH(ptree::value_type &iter, pt.get_child("blockdevices")) {
@@ -85,7 +85,7 @@ shared_ptree Volume::ls_volumes()
 			vol.put("uuid", row.get<string>(0));
 			vol.put("mount", row.get<string>(1));
 			auto value = row.get<long long>(2);
-			vol.put("tracking", std::to_string(value));
+			vol.put("tracking", value != 0);
 			std::string tmp;
 			json_write_to_string(vol, tmp);
 			content.push_back(std::make_pair("", vol));

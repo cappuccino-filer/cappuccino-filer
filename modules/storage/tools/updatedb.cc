@@ -20,7 +20,7 @@ namespace {
 	void init_pref()
 	{
 		auto pt_pref = std::make_shared<ptree>();
-		boost::property_tree::read_json(std::cin, *pt_pref);
+		json_read_from_stream(std::cin, *pt_pref);
 		Pref::instance()->set_registry(pt_pref);
 		Pref::instance()->scan_modules();
 	}
@@ -28,7 +28,7 @@ namespace {
 	shared_ptree read_req()
 	{
 		auto pt_req = std::make_shared<ptree>();
-		boost::property_tree::read_json(std::cin, *pt_req);
+		json_read_from_stream(std::cin, *pt_req);
 		return pt_req;
 	}
 

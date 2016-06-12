@@ -11,7 +11,6 @@
 #include <caf/all.hpp>
 #include "json.h"
 
-using boost::property_tree::ptree;
 using std::string;
 
 class Pref {
