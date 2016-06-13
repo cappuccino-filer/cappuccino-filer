@@ -11,6 +11,7 @@
 #include <database.h>
 #include <dirent.h>
 #include "../init.h"
+#include "../dbutil.h"
 #include <QDebug>
 #include "../syncer.h"
 #include <soci/soci.h>
@@ -67,8 +68,10 @@ int main(int argc, char* argv[])
 {
 	std::string base;
 	int volid = -1;
-	// If started from console, then assuming it's debugging.
+	bool need_create_volume_table = false;
 	if (!isatty(fileno(stdin))) {
+		// Normally updatedb should be launched by cappuccino-filer
+		// with property tree sent from stdin.
 		init_pref();
 		auto pt_req = read_req();
 		// TODO: disable debugging by changing "/boot" to "" 
@@ -76,6 +79,7 @@ int main(int argc, char* argv[])
 		if (base.empty())
 			return 0;
 	} else if (argc > 1) {
+		// If started from console, then assuming it's debugging.
 		base = argv[1];
 	} else {
 		base = "/boot";
@@ -116,33 +120,24 @@ int main(int argc, char* argv[])
 			if (matchingstat.st_dev == objstat.st_dev) {
 				*db << "INSERT INTO tracking_table(uuid) VALUES(:1)", soci::use(uuid);
 				*db << "SELECT LAST_INSERT_ID();", soci::into(volid);
+				need_create_volume_table = true;
 			}
 		}
 	}
 	qDebug() << "Scanning Vol " << volid;
-	tr1.commit();
 
 	/*
  	 * Create table if not exists.
 	 */
-	soci::transaction tr2(*db);
-	string stmt("CREATE TABLE IF NOT EXISTS vol_");
-	stmt += std::to_string(volid);
-	stmt += "_inode_table (inode BIGINT PRIMARY KEY, size BIGINT NOT NULL, hash BLOB(32) NULL, mtime_sec BIGINT NULL, mtime_nsec BIGINT NULL, last_check DATETIME NULL, ack BOOLEAN);";
-	*db << stmt;
-	stmt = "CREATE TABLE IF NOT EXISTS vol_";
-	stmt += std::to_string(volid);
-	stmt += "_dentry_table (dnode BIGINT NOT NULL, name VARCHAR(255) NOT NULL, inode BIGINT NOT NULL, ack BOOLEAN, PRIMARY KEY (dnode, name) );";
-	*db << stmt;
-	tr2.commit();
+	if (need_create_volume_table)
+		create_volume_table(db, volid);
+	tr1.commit();
 
 	syncer = std::make_unique<Syncer>(db, volid);
 	db->begin();
-	*db << "UPDATE vol_" + std::to_string(volid) + "_dentry_table SET ack = false;";
-	*db << "UPDATE vol_" + std::to_string(volid) + "_inode_table SET ack = false;";
+	set_voluem_table_before_sync(db, volid);
 	scan_main(base);
-	*db << "DELETE FROM vol_" + std::to_string(volid) + "_dentry_table WHERE ack = false;";
-	*db << "DELETE FROM vol_" + std::to_string(volid) + "_inode_table WHERE ack = false;";
+	clean_voluem_table_after_sync(db, volid);
 	db->commit();
 
 	return 0;
