@@ -19,7 +19,7 @@ namespace {
 
 	boost::promise<int> mkpromise(int value) { boost::promise<int> ret; ret.set_value(value); return ret; }
 
-	boost::future<int> http_file_fetch(HttpServer::ResponsePtr response, shared_ptr<HttpServer::Request> request)
+	boost::future<int> http_file_fetch(HttpServer::ResponsePtr response, HttpServer::RequestPtr request)
 	{
 		string path = request->path;
 		qDebug() << "HTTP GET request: " << path;
@@ -89,7 +89,7 @@ namespace {
 int init_httpd() 
 {
 	server = new HttpServer(8080, 1);
-	server->default_resource["GET"]  = http_file_fetch;
+	server->default_resource["GET"] = http_file_fetch;
 	server->resource["^/api/.*"]["POST"] = http_api;
 	server->resource["^/api/.*"]["GET"] = http_api;
 	auto pserver = server;
