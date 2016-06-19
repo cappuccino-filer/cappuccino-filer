@@ -53,7 +53,7 @@ namespace {
 
 				portal::make_response_header(*response, status, header_info);
 				(*response) << jsonstr;
-				std::cout << jsonstr;
+				qDebug() << jsonstr.c_str();
 
 				response->promise.set_value(0);
 				self->quit();
@@ -68,6 +68,9 @@ namespace {
 		try {
 			json_read_from_stream(request->content, *pt);
 		} catch (...) {
+			/* invalid json, simply ignore it
+ 			 * because it's OK to send GET without any content
+			 */
 		}
 		pt->put("method", request->method);
 		try {

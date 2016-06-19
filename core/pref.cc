@@ -151,6 +151,7 @@ void Pref::load_defaults()
 	reg_->put("core.toolpath", "tools/");
 	reg_->put("core.database", "mariadb");
 	reg_->put("core.libpath", "./modules");
+	reg_->put("core.libexecpath", "./");
 	reg_->put("mariadb.host", "localhost");
 	reg_->put("mariadb.user", "test");
 	reg_->put("mariadb.password", "test");

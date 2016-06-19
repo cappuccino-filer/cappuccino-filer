@@ -40,12 +40,12 @@ void create_volume_table(DbConnection dbc, int volid)
 	exec_sql_for_volume(dbc, volid, create_volum_sql, ARRAY_SIZE(create_volum_sql));
 }
 
-void set_voluem_table_before_sync(DbConnection dbc, int volid)
+void set_volume_table_before_sync(DbConnection dbc, int volid)
 {
 	exec_sql_for_volume(dbc, volid, volume_set_ack_false, ARRAY_SIZE(volume_set_ack_false));
 }
 
-void clean_voluem_table_after_sync(DbConnection dbc, int volid)
+void clean_volume_table_after_sync(DbConnection dbc, int volid)
 {
 	exec_sql_for_volume(dbc, volid, volume_clear_non_ack, ARRAY_SIZE(volume_clear_non_ack));
 }

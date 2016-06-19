@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <pref.h>
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <json.h>
 #include <database.h>
@@ -18,12 +19,31 @@
 
 namespace {
 
-	void init_pref()
+	shared_ptree init()
 	{
-		auto pt_pref = std::make_shared<ptree>();
-		json_read_from_stream(std::cin, *pt_pref);
+		auto pt_pref = create_ptree();
+		uint32_t prefsize, reqsize;
+		std::cin.read((char*)&prefsize, sizeof(uint32_t));
+		std::cin.read((char*)&reqsize, sizeof(uint32_t));
+		std::stringstream prefss, reqss;
+		std::copy_n(std::istream_iterator<char>(std::cin),
+				prefsize,
+				std::ostream_iterator<char>(prefss));
+		std::copy_n(std::istream_iterator<char>(std::cin),
+				reqsize,
+				std::ostream_iterator<char>(reqss));
+		prefss.seekg(0, std::ios::beg);
+		reqss.seekg(0, std::ios::beg);
+		qDebug() << prefss.str().c_str();
+		qDebug() << reqss.str().c_str();
+
+		json_read_from_stream(prefss, *pt_pref);
 		Pref::instance()->set_registry(pt_pref);
 		Pref::instance()->scan_modules();
+
+		auto pt_req = create_ptree();
+		json_read_from_stream(reqss, *pt_req);
+		return pt_req;
 	}
 
 	shared_ptree read_req()
@@ -38,9 +58,13 @@ namespace {
 
 	bool connect_sql()
 	{
-		auto dbname = Pref::instance()->get_pref("core.database");
-		Pref::instance()->scan_modules();
-		Pref::instance()->load_specific_module("lib" + dbname); // Now database is avaliable at DatabaseRegistry::get_db()
+		try {
+			auto dbname = Pref::instance()->get_pref("core.database");
+			Pref::instance()->scan_modules();
+			Pref::instance()->load_specific_module("lib" + dbname); // Now database is avaliable at DatabaseRegistry::get_db()
+		} catch (std::exception& e) {
+			qDebug() << e.what();
+		}
 		db = DatabaseRegistry::get_shared_dbc();
 		return !!db;
 	}
@@ -62,27 +86,92 @@ namespace {
 		chdir(path.c_str());
 		scan_cwd();
 	}
+
+	void scan_volume(const std::string& base)
+	{
+		int volid = -1;
+		bool need_create_volume_table = false;
+		struct stat objstat;
+		::lstat(base.c_str(), &objstat);
+
+		/*
+		 * Locate the tracking ID, which identifies the table we need to
+		 * update
+		 */
+		soci::transaction tr1(*db);
+		soci::rowset<soci::row> mpoints = (db->prepare << "SELECT mount, trID from volumes_table,tracking_table WHERE volumes_table.uuid = tracking_table.uuid;");
+		for(auto& row : mpoints) {
+			auto mp = row.get<string>(0);
+			auto id = row.get<int>(1);
+			struct stat matchingstat;
+			::lstat(mp.c_str(), &matchingstat);
+			if (matchingstat.st_dev == objstat.st_dev)
+				volid = id;
+		}
+		/*
+		 * Insert row to tracking table, which generates a new tracking ID.
+		 */
+		if (volid < 0) {
+			soci::rowset<soci::row>  mpoints = (db->prepare << "SELECT mount,uuid from volumes_table;");
+			for(auto& row : mpoints) {
+				auto mp = row.get<string>(0);
+				auto uuid = row.get<string>(1);
+				struct stat matchingstat;
+				::lstat(mp.c_str(), &matchingstat);
+				if (matchingstat.st_dev == objstat.st_dev) {
+					*db << "INSERT INTO tracking_table(uuid,tracking) VALUES(:1,1)", soci::use(uuid);
+					*db << "SELECT LAST_INSERT_ID();", soci::into(volid);
+					need_create_volume_table = true;
+				}
+			}
+		}
+		qDebug() << "Scanning Vol " << volid;
+
+		/*
+		 * Create table if not exists.
+		 */
+		if (need_create_volume_table)
+			create_volume_table(db, volid);
+		tr1.commit();
+
+		syncer = std::make_unique<Syncer>(db, volid);
+		db->begin();
+		set_volume_table_before_sync(db, volid);
+		scan_main(base);
+		clean_volume_table_after_sync(db, volid);
+		db->commit();
+	}
 };
 
 int main(int argc, char* argv[])
 {
-	std::string base;
-	int volid = -1;
-	bool need_create_volume_table = false;
+	std::vector<std::string> base_array;
 	if (!isatty(fileno(stdin))) {
 		// Normally updatedb should be launched by cappuccino-filer
 		// with property tree sent from stdin.
-		init_pref();
-		auto pt_req = read_req();
+		auto pt_req = init();
 		// TODO: disable debugging by changing "/boot" to "" 
-		base = pt_req->get("path", "");
-		if (base.empty())
+		try {
+			for (const auto& kvpair : pt_req->get_child("paths")) {
+				base_array.emplace_back(
+						kvpair.second.get_value<std::string>()
+					);
+			}
+		} catch (std::exception& e) {
+			qDebug() << e.what();
+		}
+		if (base_array.empty())
 			return 0;
+		qDebug() << "Going to scan ";
+		for(const auto& path : base_array) {
+			qDebug() << "\t\t" << path.c_str();
+		}
 	} else if (argc > 1) {
 		// If started from console, then assuming it's debugging.
-		base = argv[1];
+		for(int i = 1; i < argc; i++)
+			base_array.emplace_back(argv[i]);
 	} else {
-		base = "/boot";
+		base_array.emplace_back("/boot");
 	}
 
 	if (!connect_sql()) {
@@ -90,55 +179,9 @@ int main(int argc, char* argv[])
 		return -1;
 	}
 
-	struct stat objstat;
-	::lstat(base.c_str(), &objstat);
-
-	/*
- 	 * Locate the tracking ID, which identifies the table we need to
- 	 * update
-	 */
-	soci::transaction tr1(*db);
-	soci::rowset<soci::row> mpoints = (db->prepare << "SELECT mount, trID from volumes_table,tracking_table WHERE volumes_table.uuid = tracking_table.uuid;");
-	for(auto& row : mpoints) {
-		auto mp = row.get<string>(0);
-		auto id = row.get<int>(1);
-		struct stat matchingstat;
-		::lstat(mp.c_str(), &matchingstat);
-		if (matchingstat.st_dev == objstat.st_dev)
-			volid = id;
+	for(const auto& base : base_array) {
+		scan_volume(base);
 	}
-	/*
- 	 * Insert row to tracking table, which generates a new tracking ID.
- 	 */
-	if (volid < 0) {
-		soci::rowset<soci::row>  mpoints = (db->prepare << "SELECT mount,uuid from volumes_table;");
-		for(auto& row : mpoints) {
-			auto mp = row.get<string>(0);
-			auto uuid = row.get<string>(1);
-			struct stat matchingstat;
-			::lstat(mp.c_str(), &matchingstat);
-			if (matchingstat.st_dev == objstat.st_dev) {
-				*db << "INSERT INTO tracking_table(uuid) VALUES(:1)", soci::use(uuid);
-				*db << "SELECT LAST_INSERT_ID();", soci::into(volid);
-				need_create_volume_table = true;
-			}
-		}
-	}
-	qDebug() << "Scanning Vol " << volid;
-
-	/*
- 	 * Create table if not exists.
-	 */
-	if (need_create_volume_table)
-		create_volume_table(db, volid);
-	tr1.commit();
-
-	syncer = std::make_unique<Syncer>(db, volid);
-	db->begin();
-	set_voluem_table_before_sync(db, volid);
-	scan_main(base);
-	clean_voluem_table_after_sync(db, volid);
-	db->commit();
 
 	return 0;
 }

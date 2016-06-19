@@ -86,7 +86,7 @@ export class VolumeComponent implements OnInit {
 
 	getVolumeInfo()
 	{
-		this.volumeService.getVolumeInfo().then(volumes => this.volinfo = volumes)
+		this.volumeService.getVolumeInfo().then(volumes => this.volinfo = volumes);
 	}
 
 	ngOnInit() {
@@ -94,6 +94,6 @@ export class VolumeComponent implements OnInit {
 	}
 
 	doSubmit() {
-		console.log(JSON.stringify(this.volinfo));
+		this.volumeService.updateVolumeSettings(this.volinfo).then(volumes => this.volinfo = volumes);
 	}
 }

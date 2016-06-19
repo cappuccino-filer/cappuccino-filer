@@ -1,22 +1,39 @@
 #include "launcher.h"
 #include "pref.h"
+#include <QDebug>
 
 shared_ptree Launcher::launch(const std::string& prog, shared_ptree pt, bool superuser)
 {
 	auto proc = std::make_shared<QProcess>();
+#if 1
+	proc->setInputChannelMode(QProcess::ManagedInputChannel);
+	proc->setProcessChannelMode(QProcess::ForwardedErrorChannel);
+#endif
 	proc->start(QString::fromStdString(prog));
+	if (!proc->waitForStarted()) {
+		auto ret = create_ptree();
+		ret->put("class", "plaunch");
+		ret->put("status", "timeout");
+		return ret;
+	}
 	key_++;
 	flying_[key_] = proc;
-	std::string tmpstr;
-	json_write_to_string(Pref::instance()->get_registry(), tmpstr);
-	proc->write(tmpstr.data(), tmpstr.size());
-	proc->write("\n", 1);
-	json_write_to_string(pt, tmpstr);
-	proc->write(tmpstr.data(), tmpstr.size());
+	std::string tmpstr1, tmpstr2;
+	json_write_to_string(Pref::instance()->get_registry(), tmpstr1);
+	json_write_to_string(pt, tmpstr2);
+	uint32_t size1 = uint32_t(tmpstr1.size());
+	uint32_t size2 = uint32_t(tmpstr2.size());
+	qDebug() << proc->write((const char*)&size1, sizeof(uint32_t));
+	qDebug() << proc->write((const char*)&size2, sizeof(uint32_t));
+	qDebug() << proc->write(tmpstr1.data(), tmpstr1.size());
+	qDebug() << proc->write(tmpstr2.data(), tmpstr2.size());
+	qDebug() << proc->waitForBytesWritten();
 
-	auto ret = std::make_shared<ptree>();
-	pt->put("class", "plaunch");
-	pt->put("jobkey", key_);
+	auto ret = create_ptree();
+	ret->put("class", "plaunch");
+	ret->put("status", "running");
+	ret->put("jobkey", key_);
+	return ret;
 }
 
 std::shared_ptr<QProcess> Launcher::get_job(int key)
