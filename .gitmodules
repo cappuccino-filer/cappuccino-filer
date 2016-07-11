@@ -4,9 +4,6 @@
 [submodule "third-party/actor-framework"]
 	path = third-party/actor-framework
 	url = https://github.com/actor-framework/actor-framework.git
-[submodule "third-party/angular-filemanager"]
-	path = third-party/angular-filemanager
-	url = git@github.com:xinyazhang/angular-filemanager.git
 [submodule "third-party/soci"]
 	path = third-party/soci
 	url = https://github.com/SOCI/soci.git
