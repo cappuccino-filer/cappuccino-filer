@@ -10,3 +10,6 @@
 [submodule "third-party/material2"]
 	path = third-party/material2
 	url = https://github.com/angular/material2.git
+[submodule "third-party/json"]
+	path = third-party/json
+	url = https://github.com/nlohmann/json.git
