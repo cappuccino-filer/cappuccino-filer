@@ -11,11 +11,6 @@ ReadDir::~ReadDir()
 ReadDir::ReadDir(DIR* dir, DbConnection db)
 	:dir_(dir), db_(db)
 {
-	int name_max = fpathconf(dirfd(dir), _PC_NAME_MAX);
-	if (name_max == -1)         /* Limit not defined, or error */
-			name_max = 255;         /* Take a guess */
-	int dentsize = offsetof(struct dirent, d_name) + name_max + 1;
-	entryp_.reset(new char[dentsize]);
 }
 
 std::unique_ptr<ReadDir> ReadDir::create(DbConnection db, const string& path)

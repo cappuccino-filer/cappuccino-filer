@@ -26,7 +26,6 @@ private:
 	DbConnection db_;
 	DIR* dir_;
 	shared_ptree cache_;
-	std::unique_ptr<char[]> entryp_;
 };
 
 #endif
