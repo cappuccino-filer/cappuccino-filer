@@ -7,12 +7,8 @@ set (cappuccino_filer_VERSION_MINOR 1)
 
 include_directories(${CMAKE_SOURCE_DIR}/third-party/actor-framework/libcaf_core)
 include_directories(${CMAKE_SOURCE_DIR}/third-party/actor-framework/libcaf_io)
-include_directories(${CMAKE_SOURCE_DIR}/third-party/date/)
 include_directories(${CMAKE_SOURCE_DIR}/third-party/json/src/)
 include_directories(${CMAKE_SOURCE_DIR}/third-party/soci/include/)
-#include_directories(${CMAKE_SOURCE_DIR}/third-party/sqlpp11/include/)
-#include_directories(${CMAKE_SOURCE_DIR}/third-party/sqlpp11-connector-mysql/include)
-#include_directories(${CMAKE_SOURCE_DIR}/backend)
 include_directories(${CMAKE_SOURCE_DIR}/core)
 
 # C++11 and Debug
@@ -62,7 +58,9 @@ ExternalProject_Add(SOCI
 	GIT_SUBMODULES "${CMAKE_SOURCE_DIR}/third-party/soci"
 	INSTALL_COMMAND ""
 	BINARY_DIR "${SOCI_BIN}")
-SET(SOCI_LIBS ${SOCI_BIN}/lib/libsoci_core.so ${SOCI_BIN}/lib/libsoci_mysql.so)
+SET(SOCI_CORE_LIBRARY ${SOCI_BIN}/lib/libsoci_core.so)
+SET(SOCI_MYSQL_LIBRARY ${SOCI_BIN}/lib/libsoci_mysql.so)
+SET(SOCI_PG_LIBRARY ${SOCI_BIN}/lib/libsoci_postgresql.so)
 include_directories(${SOCI_BIN}/include/)
 
 # Main program
@@ -74,49 +72,50 @@ QT5_USE_MODULES(cappuccino-filer Core)
 AUX_SOURCE_DIRECTORY(core CORE_MSRC)
 ADD_LIBRARY(core SHARED ${CORE_MSRC})
 ADD_DEPENDENCIES(core CAF)
-TARGET_LINK_LIBRARIES(core ${Boost_LIBRARIES} Qt5::Core ${CAF_LIBS})
+TARGET_LINK_LIBRARIES(core Qt5::Core ${CAF_LIBS})
 
 # Modules
+FUNCTION(ADD_MODULE name)
+	AUX_SOURCE_DIRECTORY(modules/${name} TMP_MSRC)
+	ADD_LIBRARY(${name} SHARED ${TMP_MSRC})
+	TARGET_LINK_LIBRARIES(${name} core) # Every module links to core
+	SET_TARGET_PROPERTIES(${name} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/modules)
+ENDFUNCTION()
+FUNCTION(ADD_DEMO name)
+	ADD_LIBRARY(${name} SHARED modules/demos/${name}.cc)
+	SET_TARGET_PROPERTIES(${name} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/modules)
+ENDFUNCTION()
+
 ## portal (embedded httpd) 
-AUX_SOURCE_DIRECTORY(modules/portal PORTAL_MSRC)
-ADD_LIBRARY(portal SHARED ${PORTAL_MSRC})
-TARGET_LINK_LIBRARIES(portal core ${Boost_LIBRARIES} Qt5::Core)
-SET_TARGET_PROPERTIES(portal PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/modules)
+ADD_MODULE(portal)
+TARGET_LINK_LIBRARIES(portal ${Boost_LIBRARIES} Qt5::Core)
 
 ## database
-AUX_SOURCE_DIRECTORY(modules/mariadb DATABASE_MSRC)
-ADD_LIBRARY(mariadb SHARED ${DATABASE_MSRC})
-ADD_DEPENDENCIES(mariadb SOCI)
-TARGET_LINK_LIBRARIES(mariadb core ${MYSQL_LIBRARY} ${SOCI_LIBS})
-SET_TARGET_PROPERTIES(mariadb PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/modules)
+### MariaDB
+ADD_MODULE(mariadb)
+TARGET_LINK_LIBRARIES(mariadb ${SOCI_CORE_LIBRARY} ${SOCI_MYSQL_LIBRARY})
 
+### PostgreSQL
+ADD_MODULE(pg)
 FIND_PACKAGE(PostgreSQL REQUIRED)
-AUX_SOURCE_DIRECTORY(modules/pg PG_MSRC)
-ADD_LIBRARY(pg SHARED ${PG_MSRC})
-ADD_DEPENDENCIES(pg SOCI)
-TARGET_LINK_LIBRARIES(pg core ${POSTGRESQL_LIBRARY} ${SOCI_LIBS})
-SET_TARGET_PROPERTIES(pg PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/modules)
+TARGET_LINK_LIBRARIES(pg ${SOCI_CORE_LIBRARY})
 
-# storage (interacting with file system directly)
-AUX_SOURCE_DIRECTORY(modules/storage STORAGE_MSRC)
-ADD_LIBRARY(storage SHARED ${STORAGE_MSRC})
-TARGET_LINK_LIBRARIES(storage core ${Boost_LIBRARIES} ${MYSQL_LIBRARY} ${SOCI_LIBS})
-SET_TARGET_PROPERTIES(storage PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/modules)
+## storage (interacting with file system directly)
+ADD_MODULE(storage)
+TARGET_LINK_LIBRARIES(storage ${SOCI_CORE_LIBRARY})
+### storage/updatedb
 AUX_SOURCE_DIRECTORY(modules/storage/tools UPDATEDB_SRC)
 ADD_EXECUTABLE(updatedb ${UPDATEDB_SRC})
 
 # Demo modules
-ADD_LIBRARY(00-stub SHARED modules/demos/00-stub-module.cc)
-TARGET_LINK_LIBRARIES(00-stub core ${Boost_LIBRARIES} Qt5::Core)
-SET_TARGET_PROPERTIES(00-stub PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/modules)
-ADD_LIBRARY(01-module-api SHARED modules/demos/01-module-api.cc)
-TARGET_LINK_LIBRARIES(01-module-api core ${Boost_LIBRARIES} Qt5::Core)
-SET_TARGET_PROPERTIES(01-module-api PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/modules)
-ADD_LIBRARY(demo04 SHARED modules/demos/04-actor-basics.cc)
-TARGET_LINK_LIBRARIES(demo04 core ${CAF_LIBS})
-SET_TARGET_PROPERTIES(demo04 PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/modules)
+ADD_DEMO(00-stub-module)
+TARGET_LINK_LIBRARIES(00-stub-module core Qt5::Core)
+ADD_DEMO(01-module-api)
+TARGET_LINK_LIBRARIES(01-module-api core Qt5::Core)
+ADD_DEMO(04-actor-basics)
+TARGET_LINK_LIBRARIES(04-actor-basics core ${CAF_LIBS})
 
-TARGET_LINK_LIBRARIES(cappuccino-filer core ${MYSQLPP11_LIBS} ${MYSQL_LIBRARY})
-TARGET_LINK_LIBRARIES(updatedb storage core ${MYSQLPP11_LIBS} ${MYSQL_LIBRARY})
+TARGET_LINK_LIBRARIES(cappuccino-filer core)
+TARGET_LINK_LIBRARIES(updatedb storage core ${SOCI_CORE_LIBRARY})
 
 # vim: tw=0

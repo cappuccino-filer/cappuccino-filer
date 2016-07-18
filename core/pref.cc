@@ -102,12 +102,15 @@ void Pref::load_single_module(QLibrary& lib)
 	auto term = (cappuccino_filer_module_term) (lib.resolve(MODULE_TERM_NAME));
 	if (init && term) {
 		ret = (*init)();
-	} else {
+	} else if (lib.isLoaded()) {
 		qDebug() << "Library " << fn
 			<< " does not have function "
 			<< MODULE_INIT_NAME
 			<< " or "
 			<< MODULE_TERM_NAME;
+	} else {
+		qDebug() << "Library " << fn
+			<< " cannot be loaded";
 	}
 	if (ret < 0) {
 		qDebug() << "Unload " << fn << " since it failed to initialize";
