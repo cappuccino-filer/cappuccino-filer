@@ -51,13 +51,12 @@ void Volume::scan(DbConnection dbc)
 	//qDebug() << "lsblk output:" << all;
 	std::stringstream ss(all.toStdString());
 	ptree pt;
-	json_read_from_stream(ss, pt);
+	pt.load_from(ss);
 
 	soci::transaction tr(*dbc);
-	for(const auto& iter: pt.get_child("blockdevices")) {
-		const auto& sub = iter.second;
+	for(const ptree& sub: pt.get_child("blockdevices")) {
 		qDebug() << "lsblk item:" << sub.get<std::string>("uuid", "failed").c_str();
-		auto mp = sub.get<std::string>("mountpoint", "");
+		auto mp = sub.get("mountpoint", "");
 		if (mp[0] != '/')
 			continue;
 		try {
@@ -75,7 +74,7 @@ void Volume::scan(DbConnection dbc)
 
 shared_ptree Volume::ls_volumes()
 {
-	shared_ptree ret = create_ptree();
+	shared_ptree ret;
 	auto dbc = DatabaseRegistry::get_shared_dbc();
 	//scan(dbc);
 	try {
@@ -88,11 +87,13 @@ shared_ptree Volume::ls_volumes()
 			vol.put("mount", row.get<string>(1));
 			auto value = row.get<long long>(2);
 			vol.put("tracking", value != 0);
+#if 0
 			std::string tmp;
 			json_write_to_string(vol, tmp);
-			content.push_back(std::make_pair("", vol));
+#endif
+			content.push_back(vol);
 		}
-		ret->add_child("volumelist", content);
+		ret.put("volumelist", content);
 	} catch (std::exception& e) {
 		qDebug() << e.what();
 	}
@@ -111,9 +112,8 @@ shared_ptree Volume::handle_request(shared_ptree pt)
 	try {
 		auto dbc = DatabaseRegistry::get_shared_dbc();
 		soci::transaction tr1(*dbc);
-		for(const auto& kvpair: pt->get_child("volumelist")) {
+		for(const ptree vol : pt.get_child("volumelist")) {
 			// Retrive volume from ptree
-			const auto& vol = kvpair.second;
 			auto uuid = vol.get<std::string>("uuid", "");
 			auto mp = vol.get<std::string>("mount", "");
 			auto tracking_str = vol.get<std::string>("tracking", "");
@@ -157,7 +157,7 @@ shared_ptree Volume::handle_request(shared_ptree pt)
 		qDebug() << e.what();
 	} catch (...) {
 		std::string buf;
-		json_write_to_string(pt, buf);
+		pt.dump_to(buf);
 		qDebug() << "Error in parsing json " << buf.c_str();
 	}
 	if (!path_list.empty()) {
@@ -165,13 +165,13 @@ shared_ptree Volume::handle_request(shared_ptree pt)
 		for(const auto& mp : path_list) {
 			ptree path;
 			path.put("", mp);
-			paths.push_back(std::make_pair("", path));
+			paths.push_back(path);
 		}
 		// Launch the updatedb process
-		shared_ptree req = create_ptree();
-		req->add_child("paths", paths);
+		shared_ptree req;
+		req.put("paths", paths);
 		std::string buf;
-		json_write_to_string(req, buf);
+		req.dump_to(buf);
 		qDebug() << "Paths " << buf.c_str();
 		Launcher::instance()->launch(Pref::instance()->get_pref("core.libexecpath")+"updatedb", req);
 	}

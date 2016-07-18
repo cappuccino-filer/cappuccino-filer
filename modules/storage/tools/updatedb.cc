@@ -21,7 +21,7 @@ namespace {
 
 	shared_ptree init()
 	{
-		auto pt_pref = create_ptree();
+		ptree pt_pref;
 		uint32_t prefsize, reqsize;
 		std::cin.read((char*)&prefsize, sizeof(uint32_t));
 		std::cin.read((char*)&reqsize, sizeof(uint32_t));
@@ -37,19 +37,19 @@ namespace {
 		qDebug() << prefss.str().c_str();
 		qDebug() << reqss.str().c_str();
 
-		json_read_from_stream(prefss, *pt_pref);
+		pt_pref.load_from(prefss);
 		Pref::instance()->set_registry(pt_pref);
 		Pref::instance()->scan_modules();
 
-		auto pt_req = create_ptree();
-		json_read_from_stream(reqss, *pt_req);
+		ptree pt_req;
+		pt_req.load_from(reqss);
 		return pt_req;
 	}
 
 	shared_ptree read_req()
 	{
-		auto pt_req = std::make_shared<ptree>();
-		json_read_from_stream(std::cin, *pt_req);
+		ptree pt_req;
+		pt_req.load_from(std::cin);
 		return pt_req;
 	}
 
@@ -152,9 +152,9 @@ int main(int argc, char* argv[])
 		auto pt_req = init();
 		// TODO: disable debugging by changing "/boot" to "" 
 		try {
-			for (const auto& kvpair : pt_req->get_child("paths")) {
+			for (const auto& item : pt_req.get_child("paths")) {
 				base_array.emplace_back(
-						kvpair.second.get_value<std::string>()
+						item.get<std::string>()
 					);
 			}
 		} catch (std::exception& e) {

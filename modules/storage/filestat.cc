@@ -32,15 +32,15 @@ FileStat FileStat::create(DbConnection, DIR* dir, const string& path)
 
 shared_ptree FileStat::mkptree()
 {
-	auto pt = std::make_shared<ptree>();
-	pt->put("class", "fstat");
-	pt->put("inode", (uintmax_t)stat_.st_ino);
-	pt->put("mode", (uintmax_t)stat_.st_mode);
-	pt->put("user", (uintmax_t)stat_.st_uid);
-	pt->put("group", (uintmax_t)stat_.st_gid);
-	pt->put("size", (uintmax_t)stat_.st_size);
-	pt->put("mtime", ctime(&stat_.st_mtime));
-	pt->put("directory", is_dir());
+	ptree pt;
+	pt.put("class", "fstat");
+	pt.put("inode", (uintmax_t)stat_.st_ino);
+	pt.put("mode", (uintmax_t)stat_.st_mode);
+	pt.put("user", (uintmax_t)stat_.st_uid);
+	pt.put("group", (uintmax_t)stat_.st_gid);
+	pt.put("size", (uintmax_t)stat_.st_size);
+	pt.put("mtime", ctime(&stat_.st_mtime));
+	pt.put("directory", is_dir());
 
 	return pt;
 }

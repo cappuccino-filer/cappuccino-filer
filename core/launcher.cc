@@ -11,16 +11,16 @@ shared_ptree Launcher::launch(const std::string& prog, shared_ptree pt, bool sup
 #endif
 	proc->start(QString::fromStdString(prog));
 	if (!proc->waitForStarted()) {
-		auto ret = create_ptree();
-		ret->put("class", "plaunch");
-		ret->put("status", "timeout");
+		ptree ret;
+		ret.put("class", "plaunch");
+		ret.put("status", "timeout");
 		return ret;
 	}
 	key_++;
 	flying_[key_] = proc;
 	std::string tmpstr1, tmpstr2;
-	json_write_to_string(Pref::instance()->get_registry(), tmpstr1);
-	json_write_to_string(pt, tmpstr2);
+	Pref::instance()->get_registry().dump_to(tmpstr1);
+	pt.dump_to(tmpstr2);
 	uint32_t size1 = uint32_t(tmpstr1.size());
 	uint32_t size2 = uint32_t(tmpstr2.size());
 	qDebug() << proc->write((const char*)&size1, sizeof(uint32_t));
@@ -29,10 +29,10 @@ shared_ptree Launcher::launch(const std::string& prog, shared_ptree pt, bool sup
 	qDebug() << proc->write(tmpstr2.data(), tmpstr2.size());
 	qDebug() << proc->waitForBytesWritten();
 
-	auto ret = create_ptree();
-	ret->put("class", "plaunch");
-	ret->put("status", "running");
-	ret->put("jobkey", key_);
+	ptree ret;
+	ret.put("class", "plaunch");
+	ret.put("status", "running");
+	ret.put("jobkey", key_);
 	return ret;
 }
 
@@ -46,14 +46,14 @@ std::shared_ptr<QProcess> Launcher::get_job(int key)
 
 shared_ptree Launcher::list_all() const
 {
-	auto ret = std::make_shared<ptree>();
+	ptree ret;
 	for(const auto& item : flying_) {
 		ptree process;
-		process.put("PID", std::to_string(item.second->processId()));
+		process.put("PID", item.second->processId());
 		process.put("program", item.second->program().toStdString());
 		// FIXME: add program arguments
 		
-		ret->add_child(std::to_string(item.first), process);
+		ret.swap_child_with(std::to_string(item.first), process);
 	}
 	return ret;
 }

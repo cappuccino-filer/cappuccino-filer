@@ -8,6 +8,7 @@ set (cappuccino_filer_VERSION_MINOR 1)
 include_directories(${CMAKE_SOURCE_DIR}/third-party/actor-framework/libcaf_core)
 include_directories(${CMAKE_SOURCE_DIR}/third-party/actor-framework/libcaf_io)
 include_directories(${CMAKE_SOURCE_DIR}/third-party/date/)
+include_directories(${CMAKE_SOURCE_DIR}/third-party/json/src/)
 include_directories(${CMAKE_SOURCE_DIR}/third-party/soci/include/)
 #include_directories(${CMAKE_SOURCE_DIR}/third-party/sqlpp11/include/)
 #include_directories(${CMAKE_SOURCE_DIR}/third-party/sqlpp11-connector-mysql/include)
@@ -109,6 +110,6 @@ TARGET_LINK_LIBRARIES(demo04 core ${CAF_LIBS})
 SET_TARGET_PROPERTIES(demo04 PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/modules)
 
 TARGET_LINK_LIBRARIES(cappuccino-filer core ${MYSQLPP11_LIBS} ${MYSQL_LIBRARY})
-TARGET_LINK_LIBRARIES(updatedb core storage ${MYSQLPP11_LIBS} ${MYSQL_LIBRARY})
+TARGET_LINK_LIBRARIES(updatedb storage core ${MYSQLPP11_LIBS} ${MYSQL_LIBRARY})
 
 # vim: tw=0

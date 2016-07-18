@@ -26,13 +26,13 @@ caf::behavior mkfstatrelay(caf::event_based_actor* self, DbConnection db)
 	return { [=](shared_ptree pt)
 		{
 			try {
-				auto path = pt->get<string>("path");
+				auto path = pt.get<string>("path");
 				auto finfo = FileStat::create(db, path);
 				return finfo.mkptree();
-			} catch (const boost::property_tree::ptree_bad_path&) {
+			} catch (const ptree::bad_path&) {
 				return formaterror;
 			} catch (const string& errmsg) {
-				return json_mkerror(errmsg.c_str());
+				return ptree::mkerror(errmsg.c_str());
 			}
 			return pt;
 		},
@@ -44,14 +44,14 @@ caf::behavior mklsrelay(caf::event_based_actor* self, DbConnection db)
 	return { [=](shared_ptree pt)
 		{
 			try {
-				auto path = pt->get<string>("path");
+				auto path = pt.get<string>("path");
 				auto dent = ReadDir::create(db, path);
 				dent->refresh();
 				return dent->mkptree();
-			} catch (const boost::property_tree::ptree_bad_path&) {
+			} catch (const ptree::bad_path&) {
 				return formaterror;
 			} catch (const string& errmsg) {
-				return json_mkerror(errmsg.c_str());
+				return ptree::mkerror(errmsg.c_str());
 			}
 			return pt;
 		},
@@ -73,8 +73,8 @@ caf::behavior mkvolume(caf::event_based_actor* self)
 {
 	return { [=](shared_ptree pt)
 		{
-			qDebug() << "method: " << pt->get("method", "").c_str();
-			if (pt->get("method", "") == "GET") {
+			qDebug() << "method: " << pt.get("method", "").c_str();
+			if (pt.get("method", "") == "GET") {
 				return Volume::instance()->ls_volumes();
 			}
 			return Volume::instance()->handle_request(pt);
@@ -94,7 +94,7 @@ extern "C" {
 
 int cappuccino_filer_module_init()
 {
-	formaterror = json_mkerror("Invalid request format");
+	formaterror = ptree::mkerror("Invalid request format");
 
 	auto db = DatabaseRegistry::get_shared_dbc();
 	caf::actor dbactor = caf::spawn(mkfstatrelay, db);

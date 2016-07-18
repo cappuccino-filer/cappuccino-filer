@@ -27,9 +27,9 @@ int cappuccino_filer_module_init()
 {
 	auto reg = Pref::instance()->get_registry();
 	try {
-		auto user = reg->get<string>("mariadb.user");
-		auto password = reg->get<string>("mariadb.password");
-		auto database = reg->get<string>("mariadb.database");
+		auto user = reg.get<string>("mariadb.user");
+		auto password = reg.get<string>("mariadb.password");
+		auto database = reg.get<string>("mariadb.database");
 		auto lambda = [user,password,database] () -> DbConnection {
 			boost::format fmt("db=%1% user=%2% pass='%3%'");
 			string conf = boost::str(fmt % database % user % password);
@@ -39,10 +39,10 @@ int cappuccino_filer_module_init()
 		DatabaseRegistry::register_database(lambda);
 
 		auto dbc = DatabaseRegistry::get_shared_dbc();
-		if (reg->get<bool>("mariadb.debug", false)) {
+		if (reg.get<bool>("mariadb.debug", false)) {
 			*dbc << "DROP TABLE IF EXISTS tab_volumes";
 		}
-	} catch (boost::property_tree::ptree_bad_path& e) {
+	} catch (ptree::bad_path& e) {
 		qDebug() << " Unable to access perference " << e.what();
 		return -1;
 	} catch (soci::soci_error& e) {

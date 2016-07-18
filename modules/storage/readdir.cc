@@ -23,9 +23,9 @@ std::unique_ptr<ReadDir> ReadDir::create(DbConnection db, const string& path)
 
 void ReadDir::refresh()
 {
-	cache_ = std::make_shared<ptree>();
+	cache_ = ptree::create();
 
-	cache_->put("class", "ls");
+	cache_.put("class", "ls");
 	ptree content;
 
 	struct dirent *presult;
@@ -39,10 +39,10 @@ void ReadDir::refresh()
 		}
 		auto finfo = FileStat::create(db_, dir_, presult->d_name);
 		auto subtree = finfo.mkptree();
-		subtree->put("name", presult->d_name);
-		content.push_back(std::make_pair("", *subtree));
+		subtree.put("name", presult->d_name); // FIXME
+		content.push_back(subtree);
 	}
-	cache_->add_child("content", content);
+	cache_.put("content", content);
 }
 
 #if 0

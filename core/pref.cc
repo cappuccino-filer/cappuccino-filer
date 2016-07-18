@@ -18,8 +18,6 @@ static struct option opts[] = {
 	{NULL,		no_argument,		NULL,		0}
 };
 
-using boost::property_tree::json_parser::read_json;
-
 void Pref::load_preference(int argc, char* argv[])
 {
 	int longidx;
@@ -54,7 +52,7 @@ void Pref::load_preference(int argc, char* argv[])
 		if (!fin.is_open()) {
 			qDebug() << "Failed to open profile: " << profile_.c_str();
 		} else {
-			read_json(fin, *reg_);
+			reg_.load_from(fin);
 		}
 	}
 }
@@ -140,7 +138,6 @@ void Pref::terminate_modules()
 
 Pref::Pref()
 {
-	reg_ = std::make_shared<ptree>();
 	load_defaults();
 }
 
@@ -148,20 +145,20 @@ void Pref::load_defaults()
 {
 	module_path_ = ".";
 	flog_ = stderr;
-	reg_->put("core.toolpath", "tools/");
-	reg_->put("core.database", "mariadb");
-	reg_->put("core.libpath", "./modules");
-	reg_->put("core.libexecpath", "./");
-	reg_->put("mariadb.host", "localhost");
-	reg_->put("mariadb.user", "test");
-	reg_->put("mariadb.password", "test");
-	reg_->put("mariadb.database", "draft");
-	reg_->put("mariadb.port", 0);
-	reg_->put("mariadb.unix_socket", "");
-	reg_->put("mariadb.client_flag", 0);
+	reg_.put("core.toolpath", "tools/");
+	reg_.put("core.database", "mariadb");
+	reg_.put("core.libpath", "./modules");
+	reg_.put("core.libexecpath", "./");
+	reg_.put("mariadb.host", "localhost");
+	reg_.put("mariadb.user", "test");
+	reg_.put("mariadb.password", "test");
+	reg_.put("mariadb.database", "draft");
+	reg_.put("mariadb.port", 0);
+	reg_.put("mariadb.unix_socket", "");
+	reg_.put("mariadb.client_flag", 0);
 	// CAVEAT: REMOVE THIS IF RELEASED
-	reg_->put("mariadb.debug", true);
-	reg_->put("portal.webroot", "../webroot");
+	reg_.put("mariadb.debug", true);
+	reg_.put("portal.webroot", "../webroot");
 }
 
 Pref* Pref::instance()
@@ -213,7 +210,7 @@ shared_ptree Pref::get_registry()
 
 std::string Pref::get_pref(const std::string& path) const
 {
-	return reg_->get(path, "");
+	return reg_.get<std::string>(path, "");
 }
 
 void Pref::set_registry(shared_ptree newpt)

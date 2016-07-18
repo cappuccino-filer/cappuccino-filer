@@ -2,114 +2,96 @@
 #define CORE_JSON_H
 
 #include <string>
+#include <istream>
+#include <memory>
+#include <stdexcept>
+#include <iterator>
 
-#define BOOST_SPIRIT_THREADSAFE
-#include <boost/property_tree/ptree.hpp>
-#include <boost/variant.hpp>
-#include <boost/variant/static_visitor.hpp>
-
-inline std::ostream& operator<<(std::ostream& fout, decltype(nullptr))
-{
-	fout << "<null>";
-	return fout;
-}
-
-typedef boost::variant<void*, std::string, int, uintmax_t, double, bool> property;
-typedef boost::property_tree::basic_ptree<std::string, property> ptree;
-typedef std::shared_ptr<ptree> shared_ptree;
-
-template<typename InputType>
-struct VariantPropertyWriter {
-	static property put_value(InputType v)
-	{
-		return property(v);
-	}
-};
-
-template<>
-struct VariantPropertyWriter<const char*> {
-	static property put_value(const char* v)
-	{
-		std::string str(v);
-		return property(str);
-	}
-};
-
-struct VariantReadStringVisitor : public boost::static_visitor<> {
-private:
-	std::string& value;
+class ptree {
 public:
-	VariantReadStringVisitor(std::string& buf)
-		:value(buf)
+	ptree();
+	explicit ptree(void*);
+	~ptree();
+
+	std::string get(const std::string& path, const char* defvalue) const;
+	template<typename T> T get(const std::string& path, const T& defvalue) const;
+	template<typename T> T get(const std::string& path = std::string()) const;
+	ptree get_child(const std::string& path);
+	const ptree get_child(const std::string& path) const;
+	const ptree get_child(size_t) const;
+
+	size_t size() const; // return the number of elements
+	// We do not provide non-const iterators, use put and push_back
+	// instead.
+	class const_iterator : public std::iterator<
+			       std::random_access_iterator_tag,
+			       ptree>
 	{
-	}
-	void operator()(void* const &i) const
-	{
-		std::ostringstream oss;
-		oss << (void*)i;
-		value += oss.str();
-		// Nothing to do here
-	}
-	void operator()(const std::string & str) const
-	{
-		value += str;
-	}
-	template <typename T>
-	void operator()(const T& v) const
-	{
-		value += std::to_string(v);
-	}
+	private:
+		friend class ptree;
+		const ptree* parent_;
+		size_t position_;
+	public:
+		const_iterator(const ptree* parent, size_t pos)
+			: parent_(parent), position_(pos)
+		{
+		}
+		const ptree operator*();
+		const_iterator operator++() { auto ret = *this; position_++; return ret; };
+		const_iterator& operator++(int) { ++position_; return *this; };
+		const_iterator operator--() { position_--; return *this; };
+		bool operator!=(const ptree::const_iterator& other)
+		{
+			return parent_ != other.parent_ || position_ != other.position_;
+		}
+		bool operator==(const ptree::const_iterator& other)
+		{
+			return !(*this != other);
+		}
+		const_iterator& operator+=(ssize_t i)
+		{
+			position_ += i;
+			return *this;
+		}
+		const_iterator& operator-=(ssize_t i)
+		{
+			return operator+=(-i);
+		}
+	};
+	const_iterator begin() const;
+	const_iterator end() const;
+
+	void put(const std::string& path, const char* value);
+	void put(const std::string& path, char* value) { put(path, (const char*)value); }
+	template<typename T> void put(const std::string& path, const T& value);
+	template<typename T> void push_back(const T& value);
+	void swap_child_with(const std::string& path, ptree& obj);
+	ptree dup();
+
+	static ptree create();
+	static ptree mkerror(const std::string& message);
+
+	void load_from(std::string&);
+	void load_from(std::istream&);
+	void dump_to(std::string&, const int indent = -1) const;
+
+	class bad_path : public std::runtime_error {
+		using runtime_error::runtime_error;
+	};
+
+	void swap(ptree& other);
+private:
+	class Deleter {
+	public:
+		Deleter(bool is_reference = false);
+		void operator()(void*);
+	private:
+		bool is_reference_;
+	};
+
+	std::shared_ptr<void> json_;
 };
 
-template<typename ExternalType>
-struct VariantPropertyTranslator {
-	typedef ExternalType external_type;
-	typedef property internal_type;
-	boost::optional<ExternalType> get_value(const property& var)
-	{
-		std::string val;
-		boost::apply_visitor(VariantReadStringVisitor(val), var);
-		return boost::get<ExternalType>(var);
-	}
-
-	template<typename T>
-	boost::optional<property> put_value(T v)
-	{
-		return VariantPropertyWriter<T>::put_value(v);
-	}
-};
-
-template<>
-struct VariantPropertyTranslator<std::string> {
-	typedef std::string external_type;
-	typedef property internal_type;
-
-	boost::optional<std::string> get_value(const property& var)
-	{
-		std::string ret;
-		boost::apply_visitor(VariantReadStringVisitor(ret), var);
-		return ret;
-	}
-
-	template<typename T>
-	boost::optional<property> put_value(T v)
-	{
-		return VariantPropertyWriter<T>::put_value(v);
-	}
-};
-
-namespace boost { namespace property_tree {
-template<typename T>
-struct translator_between<property, T> {
-	typedef VariantPropertyTranslator<T> type;
-};
-}}
-
-shared_ptree json_mkerror(const std::string&);
-shared_ptree create_ptree();
-void json_write_to_string(const shared_ptree pt, std::string&);
-void json_write_to_string(const ptree& pt, std::string&);
-void json_read_from_stream(std::istream&, ptree& pt);
-void vp_write_json_nocheck(std::ostream &stream, const ptree &pt, int indent = 0, bool pretty = false);
+using shared_ptree = ptree;
 
 #endif

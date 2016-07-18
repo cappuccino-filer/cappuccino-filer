@@ -44,7 +44,7 @@ namespace {
 		return { [=] (const shared_ptree reply) 
 			{
 				string jsonstr;
-				json_write_to_string(reply, jsonstr);
+				reply.dump_to(jsonstr);
 
 				string status = "200 OK";
 				map<string, string> header_info = {
@@ -64,15 +64,15 @@ namespace {
 	boost::future<int> http_api(HttpServer::ResponsePtr response, shared_ptr<HttpServer::Request> request)
 	{
 		qDebug() << request->method.c_str() << " on " << request->path.c_str();
-		auto pt = create_ptree();
+		ptree pt;
 		try {
-			json_read_from_stream(request->content, *pt);
+			pt.load_from(request->content);
 		} catch (...) {
 			/* invalid json, simply ignore it
  			 * because it's OK to send GET without any content
 			 */
 		}
-		pt->put("method", request->method);
+		pt.put("method", request->method);
 		try {
 			auto path = portal::canonicalize_get_url(request);
 			auto handler = Pref::instance()->match_actor(request->path);
