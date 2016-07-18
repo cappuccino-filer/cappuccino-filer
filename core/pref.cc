@@ -146,7 +146,7 @@ void Pref::load_defaults()
 	module_path_ = ".";
 	flog_ = stderr;
 	reg_.put("core.toolpath", "tools/");
-	reg_.put("core.database", "mariadb");
+	reg_.put("core.database", "pg");
 	reg_.put("core.libpath", "./modules");
 	reg_.put("core.libexecpath", "./");
 	reg_.put("mariadb.host", "localhost");
@@ -158,6 +158,12 @@ void Pref::load_defaults()
 	reg_.put("mariadb.client_flag", 0);
 	// CAVEAT: REMOVE THIS IF RELEASED
 	reg_.put("mariadb.debug", true);
+	reg_.put("pg.host", "localhost");
+	reg_.put("pg.database", "draft");
+	reg_.put("pg.port", 0);
+	reg_.put("pg.unix_socket", "");
+	reg_.put("pg.client_flag", 0);
+	reg_.put("pg.debug", true);
 	reg_.put("portal.webroot", "../webroot");
 }
 

@@ -136,8 +136,12 @@ template<typename T>
 T
 ptree::get(const std::string& path) const
 {
-	const json& ref = recursive_find_reference(CJSON, path);
-	return ref.get<T>();
+	try {
+		const json& ref = recursive_find_reference(CJSON, path);
+		return ref.get<T>();
+	} catch (...) {
+		throw bad_path(path);
+	}
 }
 
 ptree
@@ -150,14 +154,22 @@ ptree::get_child(const std::string& path)
 const ptree
 ptree::get_child(const std::string& path) const
 {
-	auto ref = recursive_find_reference(CJSON, path);
-	return ptree(const_cast<json*>(&ref));
+	try {
+		auto ref = recursive_find_reference(CJSON, path);
+		return ptree(const_cast<json*>(&ref));
+	} catch (...) {
+		throw bad_path(path);
+	}
 }
 
 const ptree
 ptree::get_child(size_t idx) const
 {
-	return ptree(const_cast<json*>(&(CJSON.at(idx))));
+	try {
+		return ptree(const_cast<json*>(&(CJSON.at(idx))));
+	} catch (...) {
+		throw bad_path("Index " + std::to_string(idx));
+	}
 }
 
 size_t
