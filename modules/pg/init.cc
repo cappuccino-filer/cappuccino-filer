@@ -17,6 +17,7 @@
 #include <string>
 #include <memory>
 #include <QDebug>
+#include "pgsqlprovider.h"
 
 using std::string;
 
@@ -33,11 +34,9 @@ int cappuccino_filer_module_init()
 					conf);
 		};
 		DatabaseRegistry::register_database(lambda);
+		DatabaseRegistry::install_sql_provider(std::make_unique<PGProvider>());
 
 		auto dbc = DatabaseRegistry::get_shared_dbc();
-		if (reg.get<bool>("pg.debug", false)) {
-			*dbc << "DROP TABLE IF EXISTS tab_volumes";
-		}
 	} catch (ptree::bad_path& e) {
 		qDebug() << " Unable to access perference " << e.what();
 		return -1;
