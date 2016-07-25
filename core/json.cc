@@ -147,7 +147,7 @@ ptree::get(const std::string& path) const
 ptree
 ptree::get_child(const std::string& path)
 {
-	auto ref = recursive_find_reference(JSON, path);
+	json& ref = recursive_find_reference(JSON, path);
 	return ptree(static_cast<void*>(&ref));
 }
 
