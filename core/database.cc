@@ -1,14 +1,26 @@
 #include "database.h"
+#include <stdexcept>
+
+void DatabaseRegistry::register_database(std::function<DbConnection()> fab)
+{
+	dbc_fab_ = fab;
+}
 
 void DatabaseRegistry::close_database()
 {
 	dbc_.reset();
+	dbc_fab_ = nullptr;
+	provider_.reset();
 }
 
 DbConnection DatabaseRegistry::get_shared_dbc()
 {
 	if (!dbc_) {
-		dbc_ = dbc_fab_();
+		try {
+			dbc_ = dbc_fab_();
+		} catch (std::bad_function_call& ) {
+			throw std::runtime_error("Failed to connect any database. Check the configuration, or no database server are running?");
+		}
 	}
 	return dbc_;
 }

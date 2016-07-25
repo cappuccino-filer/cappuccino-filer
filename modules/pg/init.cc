@@ -42,6 +42,7 @@ int cappuccino_filer_module_init()
 		return -1;
 	} catch (soci::soci_error& e) {
 		qDebug() << "Error during database conection: " << e.what();
+		DatabaseRegistry::close_database();
 		return -1;
 	}
 

@@ -26,7 +26,7 @@ using DbConnection = std::shared_ptr<soci::session>;
 
 class DatabaseRegistry {
 public:
-	static void register_database(std::function<DbConnection()> fab) { dbc_fab_ = fab; }
+	static void register_database(std::function<DbConnection()> fab);
 	static void install_sql_provider(std::unique_ptr<SQLProvider>);
 	static void close_database();
 	static DbConnection get_shared_dbc();
