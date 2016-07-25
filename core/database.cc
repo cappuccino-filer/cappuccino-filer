@@ -13,16 +13,16 @@ DbConnection DatabaseRegistry::get_shared_dbc()
 	return dbc_;
 }
 
-void DatabaseRegistry::install_query(DatabaseQuery* query)
+void DatabaseRegistry::install_sql_provider(std::unique_ptr<SQLProvider> p)
 {
-	query_.reset(query);
+	provider_ = std::move(p);
 }
 
-DatabaseQuery* DatabaseRegistry::get_query()
+SQLProvider* DatabaseRegistry::get_sql_provider()
 {
-	return query_.get();
+	return provider_.get();
 }
 
 DbConnection DatabaseRegistry::dbc_;
 std::function<DbConnection()> DatabaseRegistry::dbc_fab_;
-std::shared_ptr<DatabaseQuery> DatabaseRegistry::query_;
+std::unique_ptr<SQLProvider> DatabaseRegistry::provider_;

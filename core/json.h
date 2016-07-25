@@ -3,6 +3,7 @@
 
 #include <string>
 #include <istream>
+#include <ostream>
 #include <memory>
 #include <stdexcept>
 #include <iterator>
@@ -74,6 +75,7 @@ public:
 	void load_from(std::string&);
 	void load_from(std::istream&);
 	void dump_to(std::string&, const int indent = -1) const;
+	void dump_to(std::ostream&) const;
 
 	class bad_path : public std::runtime_error {
 		using runtime_error::runtime_error;
@@ -93,5 +95,7 @@ private:
 };
 
 using shared_ptree = ptree;
+
+std::ostream& operator<<(std::ostream&, ptree);
 
 #endif

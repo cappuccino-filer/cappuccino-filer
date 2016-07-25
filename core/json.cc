@@ -276,9 +276,20 @@ void ptree::dump_to(std::string& buf, const int indent) const
 	buf = JSON.dump(indent);
 }
 
+void ptree::dump_to(std::ostream& fout) const
+{
+	fout << JSON;
+}
+
 void ptree::swap(ptree& other)
 {
 	json_.swap(other.json_);
+}
+
+std::ostream& operator<<(std::ostream& fout, ptree pt)
+{
+	pt.dump_to(fout);
+	return fout;
 }
 
 #define INSTANT_ALL(INSTMACRO)	INSTMACRO(std::string) \

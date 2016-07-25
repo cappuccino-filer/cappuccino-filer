@@ -5,6 +5,7 @@
 #include <memory>
 #include <string>
 #include <map>
+#include "sqlprovider.h" // Thus modules needn't include sqlprovider.h separately.
 
 /*
  * TODO: database interface
@@ -23,30 +24,23 @@ class Pref;
 
 using DbConnection = std::shared_ptr<soci::session>;
 
-class DatabaseQuery {
-public:
-	virtual ~DatabaseQuery();
-
-	std::string query(int32_t cat, int32_t func); // Returns corresponding SQL string, this is sufficient for most cases
-	std::string query_volume(int vol, int func); // Return the SQL string for the specified volume.
-protected:
-	virtual load_sql_strings() = 0;
-private:
-	std::map<int64_t, std::string> sqls_;
-};
-
 class DatabaseRegistry {
 public:
 	static void register_database(std::function<DbConnection()> fab) { dbc_fab_ = fab; }
-	static void install_query(DatabaseQuery*);
+	static void install_sql_provider(std::unique_ptr<SQLProvider>);
 	static void close_database();
 	static DbConnection get_shared_dbc();
 	static std::function<DbConnection()> get_dbc_fab();
-	static DatabaseQuery* get_query();
+	static SQLProvider* get_sql_provider();
 private:
 	static DbConnection dbc_;
 	static std::function<DbConnection()> dbc_fab_;
-	static std::shared_ptr<DatabaseQuery> query_;
+	static std::unique_ptr<SQLProvider> provider_;
 };
+
+#define RETRIVE_SQL_QUERY(name_space, action) 		\
+	(DatabaseRegistry::get_sql_provider()->query(	\
+		name_space::cat_id,			\
+		name_space::action))
 
 #endif
