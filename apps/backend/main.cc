@@ -2,6 +2,8 @@
 #include <io_engine.h>
 #include <logger.h>
 #include <caf/all.hpp>
+#include <stdexcept>
+#include <QDebug>
 
 int main(int argc, char* argv[])
 {
@@ -10,7 +12,8 @@ int main(int argc, char* argv[])
 		logger::init();
 		Pref::instance()->load_modules();
 		io_engine::init();
-	} catch (...) {
+	} catch (std::exception& e) {
+		qDebug() << e.what();
 		logger::dump();
 		return 1;
 	}
