@@ -10,9 +10,8 @@
 #include <string>
 #include <json.h>
 #include <database.h>
-#include <dirent.h>
+#include <database_query_table.h>
 #include "../init.h"
-#include "../dbutil.h"
 #include <QDebug>
 #include "../syncer.h"
 #include <soci/soci.h>
@@ -55,6 +54,7 @@ namespace {
 
 	DbConnection db;
 	std::unique_ptr<Syncer> syncer;
+	SQLProvider* sql_provider;
 
 	bool connect_sql()
 	{
@@ -66,6 +66,7 @@ namespace {
 			qDebug() << e.what();
 		}
 		db = DatabaseRegistry::get_shared_dbc();
+		sql_provider = DatabaseRegistry::get_sql_provider();
 		return !!db;
 	}
 
@@ -119,8 +120,10 @@ namespace {
 				struct stat matchingstat;
 				::lstat(mp.c_str(), &matchingstat);
 				if (matchingstat.st_dev == objstat.st_dev) {
-					*db << "INSERT INTO tracking_table(uuid,tracking) VALUES(:1,1)", soci::use(uuid);
-					*db << "SELECT LAST_INSERT_ID();", soci::into(volid);
+					*db << RETRIVE_SQL_QUERY(query::meta,
+							ADD_NEW_TRACKING_WITH_RETURN),
+						soci::use(uuid),
+						soci::into(volid);
 					need_create_volume_table = true;
 				}
 			}
@@ -130,15 +133,16 @@ namespace {
 		/*
 		 * Create table if not exists.
 		 */
-		if (need_create_volume_table)
-			create_volume_table(db, volid);
+		if (need_create_volume_table) {
+			(*db) << sql_provider->query_volume(volid, query::volume::CREATE);
+		}
 		tr1.commit();
 
 		syncer = std::make_unique<Syncer>(db, volid);
 		db->begin();
-		set_volume_table_before_sync(db, volid);
+		(*db) << sql_provider->query_volume(volid, query::volume::SYNC_INIT_ACK);
 		scan_main(base);
-		clean_volume_table_after_sync(db, volid);
+		(*db) << sql_provider->query_volume(volid, query::volume::SYNC_CLEAR_NON_ACK);
 		db->commit();
 	}
 };

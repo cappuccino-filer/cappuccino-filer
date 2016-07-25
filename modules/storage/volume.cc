@@ -1,6 +1,7 @@
 #include "volume.h"
 #include "pref.h"
 #include <database.h>
+#include <database_query_table.h>
 #include <string>
 #include <json.h>
 #include <launcher.h>
@@ -23,17 +24,7 @@ Volume::Volume()
 {
 	auto& db = *(DatabaseRegistry::get_shared_dbc());
 	soci::transaction tr(db);
-	db << R"(CREATE TABLE IF NOT EXISTS volumes_table(
-				uuid char(40) PRIMARY KEY,
-				label char(32),
-				mount text
-			);)";
-	db << R"(CREATE TABLE IF NOT EXISTS tracking_table(
-				trID int PRIMARY KEY AUTO_INCREMENT,
-				uuid char(40) UNIQUE,
-				tracking int NOT NULL DEFAULT 0,
-				FOREIGN KEY(uuid) REFERENCES volumes_table(uuid)
-			);)";
+	db << RETRIVE_SQL_QUERY(query::meta, CREATE_VOLUME_RECORD_TABLE);
 	tr.commit();
 }
 
@@ -48,19 +39,35 @@ void Volume::scan(DbConnection dbc)
 			return;
 	}
 	auto all = lsblk.readAll();
-	//qDebug() << "lsblk output:" << all;
+	//qDebug() << "lsblk output:" << all.toStdString().c_str();
 	std::stringstream ss(all.toStdString());
 	ptree pt;
 	pt.load_from(ss);
+	ptree bsub = pt.get_child("blockdevices");
+	qDebug() << "lsblk blockdevices size:" << pt.get_child("blockdevices").size();
+	//std::cerr << "lsblk blockdevices from ptree:" << pt;
+	//std::cerr << "lsblk blockdevices from bsub[0]:" << bsub.get_child(1);
 
 	soci::transaction tr(*dbc);
 	for(const ptree& sub: pt.get_child("blockdevices")) {
-		qDebug() << "lsblk item:" << sub.get<std::string>("uuid", "failed").c_str();
+#if 0
+		string tmp;
+		sub.dump_to(tmp);
+		qDebug() << "lsblk json item" << tmp.c_str();
+#endif
+		string uuid = sub.get<std::string>("uuid", "");
+		if (uuid.size() < 30) {
+			qDebug() << "Skip device "
+				 << sub.get<std::string>("name", "").c_str()
+				 << " for non-unique UUID";
+			continue;
+		}
+		qDebug() << "lsblk item:" << uuid.c_str();
 		auto mp = sub.get("mountpoint", "");
 		if (mp[0] != '/')
 			continue;
 		try {
-			*dbc << "INSERT INTO volumes_table(uuid, label, mount) VALUES(:1, :2, :3) ON DUPLICATE KEY UPDATE mount=VALUES(mount)",
+			*dbc << RETRIVE_SQL_QUERY(query::meta, UPSERT_SEEN_VOLUME),
 				use(sub.get("uuid", "failed")),
 				use(sub.get("label", "")),
 				use(mp);
@@ -79,7 +86,7 @@ shared_ptree Volume::ls_volumes()
 	//scan(dbc);
 	try {
 		soci::rowset<soci::row> mpoints = (dbc->prepare <<
-				"SELECT volumes_table.uuid, mount, CASE WHEN tracking_table.trID IS NOT NULL THEN tracking_table.tracking ELSE 0 END AS tracking FROM volumes_table LEFT JOIN tracking_table ON (volumes_table.uuid = tracking_table.uuid);");
+			RETRIVE_SQL_QUERY(query::meta, LIST_SEEN_VOLUMES));
 		ptree content;
 		for(auto& row : mpoints) {
 			ptree vol;
@@ -135,7 +142,7 @@ shared_ptree Volume::handle_request(shared_ptree pt)
 				// Sync the state
 				// Note: setting non-tracking -> tracking should be
 				// done by updatedb
-				*dbc << "INSERT INTO tracking_table(uuid, tracking) VALUES(:1, :2) ON DUPLICATE KEY UPDATE tracking = :3",
+				*dbc << RETRIVE_SQL_QUERY(query::meta, UPSERT_TRACKING_RECORD),
 					use(uuid),
 					use((int)tracking),
 					use((int)tracking);

@@ -2,6 +2,8 @@
 #include <string.h>
 #include <fcntl.h>
 #include <soci/soci.h>
+#include <database.h>
+#include <database_query_table.h>
 
 using std::string;
 using std::to_string;
@@ -11,11 +13,10 @@ Syncer::Syncer(DbConnection dbc, int volid)
 	:dbc_(dbc)
 {
 	memset(&fstat_, 0, sizeof(fstat_));
+	auto sqlprovider = DatabaseRegistry::get_sql_provider();
 
-	string stmt("INSERT INTO vol_");
-	stmt += to_string(volid);
-	stmt += "_dentry_table";
-	stmt += " (dnode, name, inode, ack) VALUES (:d, :n, :i, 1) ON DUPLICATE KEY UPDATE inode=VALUES(inode), ack=1 ;";
+	string stmt;
+	stmt = sqlprovider->query_volume(volid, query::volume::UPSERT_DENTRY);
 	st_dentry_ = std::make_unique<soci::statement>(
 			(dbc->prepare << stmt,
 			 use(d_ino_),
@@ -23,8 +24,7 @@ Syncer::Syncer(DbConnection dbc, int volid)
 			 use(st_ino_))
 			);
 
-	stmt = "INSERT INTO vol_" + to_string(volid) + "_inode_table";
-	stmt += " (inode, size, mtime_sec, mtime_nsec, ack) VALUES (:1, :2, :3, :4, 1) ON DUPLICATE KEY UPDATE size=VALUES(size), mtime_sec=VALUES(mtime_sec), mtime_nsec=VALUES(mtime_nsec), ack=1 ;";
+	stmt = sqlprovider->query_volume(volid, query::volume::UPSERT_INODE);
 	st_inode_ = std::make_unique<soci::statement>(
 			(dbc->prepare << stmt,
 			use(fstat_.st_ino),
