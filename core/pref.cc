@@ -10,11 +10,13 @@
 enum {
 	OPT_LOG_FILE = 1,
 	OPT_PROFILE,
+	OPT_REFRESH_DATABASE,
 };
 
 static struct option opts[] = {
 	{"log",		required_argument,	0,	OPT_LOG_FILE},
 	{"profile",	required_argument,	0,	OPT_PROFILE},
+	{"refresh-database",	no_argument,	0,	OPT_REFRESH_DATABASE},
 	{NULL,		no_argument,		NULL,		0}
 };
 
@@ -31,7 +33,11 @@ void Pref::load_preference(int argc, char* argv[])
 			case OPT_PROFILE:
 				profile_ = std::string(optarg);
 				break;
+			case OPT_REFRESH_DATABASE:
+				reg_.put("debug.refresh_database", true);
+				break;
 			default:
+				qWarning() << "Unrecognized option " << argv[optind - 1];
 				break;
 		}
 	} while (val > 0);
@@ -152,6 +158,7 @@ void Pref::load_defaults()
 	reg_.put("core.database", "pg");
 	reg_.put("core.libpath", "./modules");
 	reg_.put("core.libexecpath", "./");
+	reg_.put("debug.refresh_database", false);
 	reg_.put("mariadb.host", "localhost");
 	reg_.put("mariadb.user", "test");
 	reg_.put("mariadb.password", "test");

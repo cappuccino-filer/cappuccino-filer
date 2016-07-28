@@ -15,6 +15,7 @@ namespace query {
 			LIST_SEEN_VOLUMES,
 			UPSERT_TRACKING_RECORD,
 			ADD_NEW_TRACKING_WITH_RETURN,
+			DROP_ALL_TABLES,
 		};
 	};
 
@@ -22,6 +23,7 @@ namespace query {
 		constexpr int cat_id = CAT_VOLUME;
 		enum {
 			CREATE,
+			UPDATE_ROOT_INODE,
 			SYNC_INIT_ACK,
 			SYNC_CLEAR_NON_ACK,
 			UPSERT_DENTRY,

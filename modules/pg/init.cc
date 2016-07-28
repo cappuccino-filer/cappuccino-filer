@@ -18,6 +18,7 @@
 #include <memory>
 #include <QDebug>
 #include "pgsqlprovider.h"
+#include <database_query_table.h>
 
 using std::string;
 
@@ -37,6 +38,17 @@ int cappuccino_filer_module_init()
 		DatabaseRegistry::install_sql_provider(std::make_unique<PGProvider>());
 
 		auto dbc = DatabaseRegistry::get_shared_dbc();
+		bool refresh_database = reg.get("debug.refresh_database", false);
+		qDebug() << "debug.refresh_database = " << refresh_database;
+		if (refresh_database) {
+			soci::transaction tr1(*dbc);
+			soci::rowset<soci::row> rows = ((dbc->prepare) << RETRIVE_SQL_QUERY(query::meta, DROP_ALL_TABLES));
+			for(auto& row : rows) {
+				(*dbc) << row.get<string>(0);
+			}
+			tr1.commit();
+			qDebug() << "DROP ALL TABLES FOR A REFRESH START";
+		}
 	} catch (ptree::bad_path& e) {
 		qDebug() << " Unable to access perference " << e.what();
 		return -1;

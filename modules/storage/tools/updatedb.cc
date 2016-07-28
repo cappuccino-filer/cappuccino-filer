@@ -136,7 +136,8 @@ namespace {
 		 * Create table if not exists.
 		 */
 		if (need_create_volume_table) {
-			(*db) << sql_provider->query_volume(volid, query::volume::CREATE), soci::use(root_ino);
+			(*db) << sql_provider->query_volume(volid, query::volume::CREATE);
+			(*db) << sql_provider->query_volume(volid, query::volume::UPDATE_ROOT_INODE), soci::use(root_ino);
 		}
 		tr1.commit();
 

@@ -52,6 +52,14 @@ INSERT INTO tracking_table(uuid,tracking) VALUES(:1,1) RETURNING trID;
 )zzz"
 		},
 		{
+			SQLINDEX(meta, DROP_ALL_TABLES),
+R"zzz(
+SELECT 'DROP TABLE IF EXISTS "' || tablename || '" CASCADE;' 
+FROM pg_tables
+WHERE schemaname = 'public';
+)zzz"
+		},
+		{
 			SQLINDEX(volume, CREATE),
 R"zzz(
 CREATE TABLE IF NOT EXISTS vol_#id_inode_table (inode BIGINT PRIMARY KEY, size
@@ -60,6 +68,11 @@ NULL, last_check TIMESTAMP WITH TIME ZONE NULL, ack BOOLEAN);
 CREATE UNIQUE INDEX vol_#id_idx_inode ON vol_#id_inode_table (inode);
 CREATE TABLE IF NOT EXISTS vol_#id_dentry_table (dnode BIGINT NOT NULL, name VARCHAR(255) NOT NULL, inode BIGINT NOT NULL, ack BOOLEAN, PRIMARY KEY (dnode, name) );
 CREATE UNIQUE INDEX vol_#id_idx_dentry ON vol_#id_dentry_table (dnode, name);
+)zzz"
+		},
+		{
+			SQLINDEX(volume, UPDATE_ROOT_INODE),
+R"zzz(
 UPDATE tracking_table SET root_inode=:1 WHERE trID=#id;
 )zzz"
 		},
