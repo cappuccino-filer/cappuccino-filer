@@ -92,6 +92,7 @@ namespace {
 	{
 		int volid = -1;
 		bool need_create_volume_table = false;
+		uint64_t root_ino;
 		struct stat objstat;
 		::lstat(base.c_str(), &objstat);
 
@@ -125,6 +126,7 @@ namespace {
 						soci::use(uuid),
 						soci::into(volid);
 					need_create_volume_table = true;
+					root_ino = uint64_t(matchingstat.st_ino);
 				}
 			}
 		}
@@ -134,7 +136,7 @@ namespace {
 		 * Create table if not exists.
 		 */
 		if (need_create_volume_table) {
-			(*db) << sql_provider->query_volume(volid, query::volume::CREATE);
+			(*db) << sql_provider->query_volume(volid, query::volume::CREATE), soci::use(root_ino);
 		}
 		tr1.commit();
 

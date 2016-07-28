@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS tracking_table(
 	trID SERIAL PRIMARY KEY,
 	uuid char(40) UNIQUE,
 	tracking int NOT NULL DEFAULT 0,
+	root_inode BIGINT,
 	FOREIGN KEY(uuid) REFERENCES volumes_table(uuid)
 );
 )zzz"
@@ -59,6 +60,7 @@ NULL, last_check TIMESTAMP WITH TIME ZONE NULL, ack BOOLEAN);
 CREATE UNIQUE INDEX vol_#id_idx_inode ON vol_#id_inode_table (inode);
 CREATE TABLE IF NOT EXISTS vol_#id_dentry_table (dnode BIGINT NOT NULL, name VARCHAR(255) NOT NULL, inode BIGINT NOT NULL, ack BOOLEAN, PRIMARY KEY (dnode, name) );
 CREATE UNIQUE INDEX vol_#id_idx_dentry ON vol_#id_dentry_table (dnode, name);
+UPDATE tracking_table SET root_inode=:1 WHERE trID=#id;
 )zzz"
 		},
 		{
@@ -88,6 +90,22 @@ R"zzz(
 INSERT INTO vol_#id_inode_table (inode, size, mtime_sec, mtime_nsec, ack)
 VALUES (:1, :2, :3, :4, true) ON CONFLICT ON CONSTRAINT vol_#id_inode_table_pkey DO UPDATE SET size=EXCLUDED.size,
 mtime_sec=EXCLUDED.mtime_sec, mtime_nsec=EXCLUDED.mtime_nsec, ack = true;
+)zzz"
+		},
+		{
+			SQLINDEX(volume, REGEX_NAME_MATCH),
+R"zzz(
+WITH RECURSIVE fstree AS
+(SELECT name, dnode, inode, CAST('/' || name AS text) AS path
+FROM vol_#id_dentry_table
+WHERE name ~ :p
+UNION ALL
+SELECT fstree.name, dt.dnode, fstree.inode, CAST('/' || dt.name || fstree.path AS text) AS path
+FROM vol_#id_dentry_table AS dt
+     INNER JOIN fstree
+     ON (dt.inode = fstree.dnode)
+)
+SELECT name,path FROM fstree WHERE dnode=(SELECT root_inode FROM tracking_table WHERE trID=#id);
 )zzz"
 		},
 	};

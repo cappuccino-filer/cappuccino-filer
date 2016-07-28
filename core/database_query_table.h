@@ -26,6 +26,7 @@ namespace query {
 			SYNC_CLEAR_NON_ACK,
 			UPSERT_DENTRY,
 			UPSERT_INODE,
+			REGEX_NAME_MATCH,
 		};
 	};
 };
