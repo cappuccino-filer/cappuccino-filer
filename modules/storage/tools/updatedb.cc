@@ -93,6 +93,7 @@ namespace {
 		int volid = -1;
 		bool need_create_volume_table = false;
 		uint64_t root_ino;
+		string root_path;
 		struct stat objstat;
 		::lstat(base.c_str(), &objstat);
 
@@ -107,8 +108,10 @@ namespace {
 			auto id = row.get<int>(1);
 			struct stat matchingstat;
 			::lstat(mp.c_str(), &matchingstat);
-			if (matchingstat.st_dev == objstat.st_dev)
+			if (matchingstat.st_dev == objstat.st_dev) {
 				volid = id;
+				root_path = mp;
+			}
 		}
 		/*
 		 * Insert row to tracking table, which generates a new tracking ID.
@@ -125,12 +128,13 @@ namespace {
 							ADD_NEW_TRACKING_WITH_RETURN),
 						soci::use(uuid),
 						soci::into(volid);
+					root_path = mp;
 					need_create_volume_table = true;
 					root_ino = uint64_t(matchingstat.st_ino);
 				}
 			}
 		}
-		qDebug() << "Scanning Vol " << volid;
+		qDebug() << "Scanning Vol " << volid << " with root path " << root_path.c_str();
 
 		/*
 		 * Create table if not exists.
@@ -144,7 +148,7 @@ namespace {
 		syncer = std::make_unique<Syncer>(db, volid);
 		db->begin();
 		(*db) << sql_provider->query_volume(volid, query::volume::SYNC_INIT_ACK);
-		scan_main(base);
+		scan_main(root_path);
 		(*db) << sql_provider->query_volume(volid, query::volume::SYNC_CLEAR_NON_ACK);
 		db->commit();
 	}
