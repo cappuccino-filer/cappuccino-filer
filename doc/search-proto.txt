@@ -1,0 +1,44 @@
+= Protocol of (/api/search)
+
+== Search By Name
+=== Request Format
+{
+	"class" : "byname",
+	"matcher" : "regex",
+	"pattern" : <pattern string>,
+	"sortby" : <reserved>,
+	"start" : <reserved>,
+	"number" : <reserved>
+};
+
+Currently we only support regular expressions (regex). Wildchar will be added
+later.
+
+sortby will be supported later.
+start and number are reserved for partial content request. 
+
+"pattern" cannot be empty for now, since partial request has not been
+implemented.
+
+=== Response format
+{
+	"class" : "search result",
+	"status" : "OK"/"OK Partial",
+	"start" : <reserved>,
+	"items" : [
+		{
+			"filename" : <file name>,
+			"path" : <path to the directory>,
+			"size" : <file size>, // Optional
+			"mtime" : <modified time> // Optional
+		},
+		...
+	]
+};
+
+Note:
+1. Naming convention of "path"
+	- "path" must start with "/" for files on all mounted volumes.
+	- For files on offline volumes, "path" must start with the unique
+	  tracking ID (trID) of the volume.
+	- "path" must use "/" as separator, even under windows.

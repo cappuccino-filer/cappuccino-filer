@@ -201,6 +201,13 @@ ptree::put(const std::string& path, const char* value)
 	put<std::string>(path, std::string(value));
 }
 
+void
+ptree::put(const std::string& path, std::string&& value)
+{
+	json& subobj = recursive_find_reference(JSON, path);
+	subobj = std::move(value);
+}
+
 template<typename T>
 void
 ptree::put(const std::string& path, const T& value)
@@ -229,6 +236,12 @@ void
 ptree::push_back<ptree>(const ptree& other)
 {
 	JSON.push_back(*CPCAST(other.json_.get()));
+}
+
+void
+ptree::push_back(ptree&& other)
+{
+	JSON.push_back(std::move(*CPCAST(other.json_.get())));
 }
 
 void

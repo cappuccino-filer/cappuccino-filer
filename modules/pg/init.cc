@@ -43,8 +43,13 @@ int cappuccino_filer_module_init()
 		if (refresh_database) {
 			soci::transaction tr1(*dbc);
 			soci::rowset<soci::row> rows = ((dbc->prepare) << RETRIVE_SQL_QUERY(query::meta, DROP_ALL_TABLES));
+			std::vector<string> sqls;
 			for(auto& row : rows) {
-				(*dbc) << row.get<string>(0);
+				sqls.emplace_back(row.get<string>(0));
+			}
+			for(const auto& sql: sqls) {
+				(*dbc) << sql;
+				qDebug() << "Executing: " << sql.c_str();
 			}
 			tr1.commit();
 			qDebug() << "DROP ALL TABLES FOR A REFRESH START";

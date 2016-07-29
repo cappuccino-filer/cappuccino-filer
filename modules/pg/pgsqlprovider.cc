@@ -109,7 +109,7 @@ mtime_sec=EXCLUDED.mtime_sec, mtime_nsec=EXCLUDED.mtime_nsec, ack = true;
 			SQLINDEX(volume, REGEX_NAME_MATCH),
 R"zzz(
 WITH RECURSIVE fstree AS
-(SELECT name, dnode, inode, CAST('/' || name AS text) AS path
+(SELECT name, dnode, inode, CAST('' AS text) AS path
 FROM vol_#id_dentry_table
 WHERE name ~ :p
 UNION ALL

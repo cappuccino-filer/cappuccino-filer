@@ -83,6 +83,7 @@ FUNCTION(ADD_MODULE name)
 ENDFUNCTION()
 FUNCTION(ADD_DEMO name)
 	ADD_LIBRARY(${name} SHARED modules/demos/${name}.cc)
+	TARGET_LINK_LIBRARIES(${name} core) # Every module links to core
 	SET_TARGET_PROPERTIES(${name} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/modules)
 ENDFUNCTION()
 
@@ -107,13 +108,17 @@ TARGET_LINK_LIBRARIES(storage ${SOCI_CORE_LIBRARY})
 AUX_SOURCE_DIRECTORY(modules/storage/tools UPDATEDB_SRC)
 ADD_EXECUTABLE(updatedb ${UPDATEDB_SRC})
 
+## search
+ADD_MODULE(search)
+TARGET_LINK_LIBRARIES(search ${SOCI_CORE_LIBRARY})
+
 # Demo modules
 ADD_DEMO(00-stub-module)
-TARGET_LINK_LIBRARIES(00-stub-module core Qt5::Core)
+TARGET_LINK_LIBRARIES(00-stub-module Qt5::Core)
 ADD_DEMO(01-module-api)
-TARGET_LINK_LIBRARIES(01-module-api core Qt5::Core)
+TARGET_LINK_LIBRARIES(01-module-api Qt5::Core)
 ADD_DEMO(04-actor-basics)
-TARGET_LINK_LIBRARIES(04-actor-basics core ${CAF_LIBS})
+TARGET_LINK_LIBRARIES(04-actor-basics ${CAF_LIBS})
 
 TARGET_LINK_LIBRARIES(cappuccino-filer core)
 TARGET_LINK_LIBRARIES(updatedb storage core ${SOCI_CORE_LIBRARY})
