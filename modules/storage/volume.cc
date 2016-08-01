@@ -92,7 +92,7 @@ shared_ptree Volume::ls_volumes()
 			ptree vol;
 			vol.put("uuid", row.get<string>(0));
 			vol.put("mount", row.get<string>(1));
-			auto value = row.get<long long>(2);
+			auto value = row.get<int>(2);
 			vol.put("tracking", value != 0);
 #if 0
 			std::string tmp;
