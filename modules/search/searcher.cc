@@ -11,7 +11,7 @@ using std::make_unique;
 Searcher::Searcher(ptree r)
 	: req_(r)
 {
-	ans_.put("class", "search result");
+	ans_.put("cat", "search result");
 }
 
 Searcher::~Searcher()
@@ -55,7 +55,7 @@ std::unique_ptr<Searcher> SearcherFab::fab(ptree pt)
 	qDebug() << "Incoming search request: " << tmp.c_str();
 
 	qDebug() << "Incoming search class : " << pt.get<string>("class", "").c_str();
-	if (pt.get<string>("class", "") != "byname")
+	if (pt.get<string>("cat", "") != "byname")
 		return make_unique<NoGoSearcher>("Unsupported search class.");
 
 	if (pt.get("matcher", "") != "regex")
@@ -91,7 +91,7 @@ SELECT trID, volumes_table.uuid, mount
 FROM tracking_table LEFT JOIN volumes_table ON (tracking_table.uuid = volumes_table.uuid);
 )zzz"
 );
-	ans_.put("status", "OK");
+	ans_.put("result", "OK");
 	try {
 		ptree array;
 		for (auto& row : indexed) {
@@ -101,7 +101,7 @@ FROM tracking_table LEFT JOIN volumes_table ON (tracking_table.uuid = volumes_ta
 		}
 		ans_.swap_child_with("items", array);
 	} catch(std::exception& e) {
-		ans_.put("status", "Error");
+		ans_.put("result", "Error");
 		ans_.put("reason", e.what());
 	}
 	return ans_;
@@ -126,7 +126,7 @@ RegexSearcher::search_vol(long long volid,
 	std::string volstr = std::to_string(volid);
 	for(const auto& row: indexed) {
 		ptree item;
-		item.put("filename", row.get<string>(0));
+		item.put("name", row.get<string>(0));
 		if (mount.empty()) 
 			item.put("path", volstr + row.get<string>(1));
 		else

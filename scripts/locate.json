@@ -1,5 +1,5 @@
 {
-"class" : "byname",
+"cat" : "byname",
 "matcher" : "regex",
 "pattern" : ".*\\.m4a",
 "sortby" : "<reserved>",

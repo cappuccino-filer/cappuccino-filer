@@ -3,7 +3,7 @@
 == Search By Name
 === Request Format
 {
-	"class" : "byname",
+	"cat" : "byname",
 	"matcher" : "regex",
 	"pattern" : <pattern string>,
 	"sortby" : <reserved>,
@@ -22,8 +22,9 @@ implemented.
 
 === Response format
 {
-	"class" : "search result",
-	"status" : "OK"/"OK Partial",
+	"cat" : "search result",
+	"result" : "OK"/"OK Partial",
+	"reason" : <optional for error reason>,
 	"start" : <reserved>,
 	"items" : [
 		{
