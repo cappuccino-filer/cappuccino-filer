@@ -48,7 +48,8 @@ namespace {
 
 				string status = "200 OK";
 				map<string, string> header_info = {
-					{ "Content-Length", to_string(jsonstr.size()) }
+					{ "Content-Length", to_string(jsonstr.size()) },
+					{ "Content-Type", "application/json"}
 				};
 
 				portal::make_response_header(*response, status, header_info);
