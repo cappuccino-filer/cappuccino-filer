@@ -10,7 +10,6 @@
     'conf-volume':                'app',
     'search-complex':		  'app',
     '@angular':                   'node_modules/@angular',
-    'angular2-in-memory-web-api': 'node_modules/angular2-in-memory-web-api',
     'rxjs':                       'node_modules/rxjs'
   };
 
@@ -20,7 +19,6 @@
     'conf-volume':                { main: 'conf-volume.js',  defaultExtension: 'js' },
     'search-complex':             { main: 'search-app.js',  defaultExtension: 'js' },
     'rxjs':                       { defaultExtension: 'js' },
-    'angular2-in-memory-web-api': { main: 'index.js', defaultExtension: 'js' },
   };
 
   var ngPackageNames = [
