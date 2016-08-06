@@ -19,6 +19,7 @@ public:
 
 	Pref();
 	void load_preference(int argc, char* argv[]);
+	void save_preference();
 	void scan_modules();
 	void load_modules();
 	void load_specific_module(const std::string&);
@@ -38,7 +39,6 @@ public:
 	void set_registry(shared_ptree);
 private:
 	void load_single_module(QLibrary&);
-
 
 	string fn_log_;
 	string profile_;

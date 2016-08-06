@@ -19,6 +19,7 @@ int main(int argc, char* argv[])
 	}
 	io_engine::run();
 	Pref::instance()->terminate_modules();
+	Pref::instance()->save_preference();
 	logger::dump();
 
 	// Cleanup CAF

@@ -24,6 +24,15 @@ void Pref::load_preference(int argc, char* argv[])
 {
 	int longidx;
 	int val;
+	char* xdg_config = getenv("XDG_CONFIG_HOME");
+	char* home = getenv("HOME");
+	if (xdg_config) {
+		profile_ = xdg_config;
+		profile_ += "/cappuccino-filer/pref.json";
+	} else {
+		profile_ = home;
+		profile_ += "/.config/cappuccino-filer/pref.json";
+	}
 	do {
 		val = getopt_long_only(argc, argv, "", opts, NULL);
 		switch (val) {
@@ -53,12 +62,31 @@ void Pref::load_preference(int argc, char* argv[])
 		flog_ = file;
 	}
 	
-	if (!profile_.empty()) {
+	if (!(reg_.get("global.debug", false))) {
 		std::ifstream fin(profile_);
 		if (!fin.is_open()) {
-			qDebug() << "Failed to open profile: " << profile_.c_str();
+			qDebug() << "Failed to open profile: " << profile_.c_str() << "\t Using default preferences";
 		} else {
 			reg_.load_from(fin);
+		}
+	}
+}
+
+void Pref::save_preference()
+{
+	if (reg_.get("global.debug", false))
+		return;
+	std::string profile_new_(profile_);
+	profile_new_ += ".new";
+	std::ofstream fout(profile_new_);
+	if (!fout.is_open()) {
+		qDebug() << "Failed to open profile: " << profile_.c_str() << "\t for save";
+	} else {
+		reg_.dump_to(fout);
+		int e = ::rename(profile_new_.c_str(), profile_.c_str());
+		if (e != 0) {
+			int en = errno;
+			qDebug() << "Error: " << strerror(errno) << "(" << en << ") when moving " << profile_new_.c_str() << " to " << profile_.c_str();
 		}
 	}
 }
@@ -154,6 +182,7 @@ void Pref::load_defaults()
 {
 	module_path_ = ".";
 	flog_ = stderr;
+	reg_.put("global.debug", true);
 	reg_.put("core.toolpath", "tools/");
 	reg_.put("core.database", "pg");
 	reg_.put("core.libpath", "./modules");
