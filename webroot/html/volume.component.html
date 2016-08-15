@@ -1,0 +1,12 @@
+<h1>{{title}}</h1>
+<nav-conf></nav-conf>
+<article>
+	<ul class="volumeclass" >
+		<li *ngFor="let vol of volinfo">
+			<span class="uuid"> {{vol.uuid}} </span>
+			<span class="mountpoint"> {{vol.mount}} </span>
+			<input type="checkbox" [(ngModel)]="vol.tracking" />
+		</li>
+	</ul>
+	<button type="button" (click)="doSubmit()">Submit</button>
+</article>
