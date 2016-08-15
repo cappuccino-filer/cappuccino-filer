@@ -69,6 +69,31 @@ namespace portal {
 		return string("/") + ret;
 	}
 
+	bool endswith(const string& haystack, const string& suffix)
+	{
+		if (haystack.length() >= suffix.length()) {
+			return (0 == haystack.compare(haystack.length() - suffix.length(), suffix.length(), suffix));
+		} else {
+			return false;
+		}
+	}
+
+	const map<string, string> suffix_mime = {
+		{ ".html", "text/html" },
+		{ ".js", "application/javascript" },
+		{ ".css", "text/css" },
+	};
+
+	string guess_type_from_name(const string& fn)
+	{
+		for (const auto& pair : suffix_mime) {
+			if (endswith(fn, pair.first)) {
+				return pair.second;
+			}
+		}
+		return string();
+	}
+
 	void render(HttpServer::Response& response, const string& reqpath) 
 	{
 		string webroot(Pref::instance()->get_webroot());
@@ -95,9 +120,12 @@ namespace portal {
 		ifs.seekg(0, ios::beg);
 
 		map<string, string> header_info = {
-			{ "class",          "http_file_fetch" },
-			{ "Content-Length", to_string(length) }
+			//{ "class",          "http_file_fetch" },
+			{ "Content-Length", to_string(length) },
 		};
+		auto content_type = guess_type_from_name(filename);
+		if (!content_type.empty())
+			header_info["Content-Type"] = content_type;
 		string status = notFound ? "404 NOT FOUND" : "200 OK";
 		make_response_header(response, status, header_info);
 
