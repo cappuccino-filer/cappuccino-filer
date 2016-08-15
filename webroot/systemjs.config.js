@@ -10,7 +10,8 @@
     'conf-volume':                'app',
     'search-complex':		  'app',
     '@angular':                   'node_modules/@angular',
-    'rxjs':                       'node_modules/rxjs'
+    '@angular2-material':         'node_modules/@angular2-material',
+    'rxjs':                       'node_modules/rxjs',
   };
 
   // packages tells the System loader how to load when no filename and/or no extension
@@ -26,6 +27,7 @@
     'compiler',
     'core',
     'http',
+    'forms',
     'platform-browser',
     'platform-browser-dynamic',
     'router',
@@ -47,6 +49,19 @@
 
   // Add package entries for angular packages
   ngPackageNames.forEach(setPackageConfig);
+
+  const materialPkgs = [
+    'core',
+    'button',
+    'input',
+    'list',
+  ];
+
+  function materialMainFile(pkgName) {
+    packages['@angular2-material/' + pkgName] = {main: pkgName+'.js', defaultExtension: 'js' };
+  }
+
+  materialPkgs.forEach(materialMainFile);
 
   var config = {
     map: map,

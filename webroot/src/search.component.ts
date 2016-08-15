@@ -1,7 +1,11 @@
-import {Component, OnInit} from '@angular/core';
-import {CORE_DIRECTIVES, FORM_DIRECTIVES, NgClass, NgIf} from '@angular/common';
+import { Component, OnInit } from '@angular/core';
+import { CORE_DIRECTIVES, FORM_DIRECTIVES, NgClass, NgIf } from '@angular/common';
 import { SearchResult, SearchReply } from './search.result';
 import { SearchService } from './search.service';
+import { MD_RIPPLE_DIRECTIVES } from '@angular2-material/core';
+import { MdButton } from '@angular2-material/button';
+import { MdInput } from '@angular2-material/input';
+import { MD_LIST_DIRECTIVES } from '@angular2-material/list';
 
 @Component({
 	selector : 'search-complex',
@@ -9,7 +13,14 @@ import { SearchService } from './search.service';
 	styleUrls: [`assets/search.component.css`],
 	//template: `<h1>{{title}}</h1>`,
 	//styles: [`.selected { background-color: #CFD8DC !important; color: white; }`],
-	directives: [SearchComponent, NgClass, NgIf, CORE_DIRECTIVES, FORM_DIRECTIVES],
+	directives: [
+		SearchComponent,
+		NgClass, NgIf,
+		CORE_DIRECTIVES, FORM_DIRECTIVES,
+		MdButton, MdInput,
+		MD_LIST_DIRECTIVES,
+		MD_RIPPLE_DIRECTIVES,
+	],
 	providers: [SearchService]
 })
 
