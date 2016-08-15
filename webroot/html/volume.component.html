@@ -1,12 +1,25 @@
 <h1>{{title}}</h1>
+<!--
 <nav-conf></nav-conf>
-<article>
-	<ul class="volumeclass" >
-		<li *ngFor="let vol of volinfo">
-			<span class="uuid"> {{vol.uuid}} </span>
-			<span class="mountpoint"> {{vol.mount}} </span>
+<ul class="volumeclass" >
+	<li *ngFor="let vol of volinfo">
+		<span class="uuid"> {{vol.uuid}} </span>
+		<span class="mountpoint"> {{vol.mount}} </span>
+		<input type="checkbox" [(ngModel)]="vol.tracking" />
+	</li>
+</ul>
+-->
+<div>
+<md-list>
+	<md-list-item *ngFor="let vol of volinfo">
+		<h3 md-line>
 			<input type="checkbox" [(ngModel)]="vol.tracking" />
-		</li>
-	</ul>
-	<button type="button" (click)="doSubmit()">Submit</button>
-</article>
+			<span>{{vol.mount}}</span>
+		</h3>
+		<p md-line>
+			{{vol.uuid}}
+		</p>
+	</md-list-item>
+</md-list>
+<button md-button (click)="doSubmit()">Apply</button>
+</div>

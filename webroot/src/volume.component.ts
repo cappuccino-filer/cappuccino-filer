@@ -3,6 +3,9 @@ import { CORE_DIRECTIVES, FORM_DIRECTIVES, NgClass, NgIf } from '@angular/common
 import { NavComponent } from './nav.component';
 import { VolumeInformation } from './volume.information';
 import { VolumeService } from './volume.service';
+import { MD_RIPPLE_DIRECTIVES } from '@angular2-material/core';
+import { MD_LIST_DIRECTIVES } from '@angular2-material/list';
+import { MdButton } from '@angular2-material/button';
 
 @Component({
 	selector: 'conf-vol',
@@ -10,7 +13,12 @@ import { VolumeService } from './volume.service';
 	styleUrls: ['assets/volume.component.css'],
 	//template: `<h1>{{title}}</h1>`,
 	//styles: [`.selected { background-color: #CFD8DC !important; color: white; }`],
-	directives: [ NavComponent, NgClass, NgIf, CORE_DIRECTIVES, FORM_DIRECTIVES ],
+	directives: [ NavComponent,
+		NgClass, NgIf, CORE_DIRECTIVES, FORM_DIRECTIVES,
+		MdButton,
+		MD_LIST_DIRECTIVES,
+		MD_RIPPLE_DIRECTIVES,
+       	],
 	providers: [ VolumeService ]
 })
 
