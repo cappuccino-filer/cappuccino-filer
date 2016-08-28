@@ -45,6 +45,10 @@ Indention:
 	Use tabs only to indent the code, which allows developers to choose the
 	width of indentions.
 
+	At the sametime, spaces should be used for alignment.
+	See http://vim.wikia.com/wiki/Indent_with_tabs,_align_with_spaces for
+	future discussions.
+
 Braces and statements
 	Left braces should NOT start a newline, the only exception is function
 	definition.
