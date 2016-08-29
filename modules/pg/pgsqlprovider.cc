@@ -112,6 +112,9 @@ WITH RECURSIVE fstree AS
 (SELECT name, dnode, inode, CAST('' AS text) AS path
 FROM vol_#id_dentry_table
 WHERE name ~ :p
+ORDER BY inode
+LIMIT :lim
+OFFSET :off
 UNION ALL
 SELECT fstree.name, dt.dnode, fstree.inode, CAST('/' || dt.name || fstree.path AS text) AS path
 FROM vol_#id_dentry_table AS dt

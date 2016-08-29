@@ -8,7 +8,8 @@
 	"pattern" : <pattern string>,
 	"sortby" : <reserved>,
 	"start" : <reserved>,
-	"number" : <reserved>
+	"number" : <reserved>,
+	"path" : <reserved>
 };
 
 Currently we only support regular expressions (regex). Wildchar will be added
@@ -34,7 +35,8 @@ implemented.
 			"mtime" : <modified time> // Optional
 		},
 		...
-	]
+	],
+	"cache-cookie" : <string> // Cookie of the result cache.
 };
 
 Note:

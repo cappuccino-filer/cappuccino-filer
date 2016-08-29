@@ -204,6 +204,7 @@ void Pref::load_defaults()
 	reg_.put("pg.client_flag", 0);
 	reg_.put("pg.debug", true);
 	reg_.put("portal.webroot", "../webroot");
+	reg_.put("searcher.limits", 100);
 }
 
 Pref* Pref::instance()
