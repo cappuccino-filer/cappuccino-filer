@@ -15,6 +15,7 @@ Searcher::Searcher(ptree r)
 	: req_(r)
 {
 	ans_.put("cat", "search result");
+	page(r);
 }
 
 Searcher::~Searcher()
@@ -28,8 +29,11 @@ void Searcher::set_unique_key(const uint256_t& key)
 
 void Searcher::page(ptree pt)
 {
-	req_.put("start", pt.get<ssize_t>("start", 0));
-	req_.put("number", pt.get<ssize_t>("number", 0));
+	ssize_t start = pt.get<ssize_t>("start", 0);
+	ssize_t number = pt.get<ssize_t>("number", 0);
+	req_.put("start", start);
+	req_.put("number", number);
+	qDebug() << "Page Searcher " << this << " to " << start << ", " << number;
 }
 
 class NoGoSearcher : public Searcher {
@@ -93,7 +97,7 @@ std::shared_ptr<Searcher> SearcherFab::fab(ptree pt)
 	pt.dump_to(tmp);
 	qDebug() << "Incoming search request: " << tmp.c_str();
 
-	qDebug() << "Incoming search class : " << pt.get<string>("class", "").c_str();
+	qDebug() << "Incoming search class : " << pt.get<string>("cat", "").c_str();
 	if (pt.get<string>("cat", "") != "byname")
 		return make_shared<NoGoSearcher>("Unsupported search class.");
 
@@ -116,10 +120,11 @@ std::shared_ptr<Searcher> SearcherFab::fab(ptree pt)
 	}
 
 	auto searcher = make_shared<RegexSearcher>(pt);
-	searcher->set_unique_key(cache_.cache(searcher));
+	// Note: do not cache the searcher here, we may need different cache policies.
 	return searcher;
 }
 
+// FIXME: use batch query in SOCI.
 struct FileResult {
 	// Required
 	string name;
@@ -135,31 +140,34 @@ struct FileResult {
 ptree
 RegexSearcher::do_search()
 {
+	qDebug() << __func__;
 	string pattern = get<string>("pattern", "");
 	auto dbc = DatabaseRegistry::get_shared_dbc();
 
 	// FIXME: invalid the cache when mounted volumes changed
 	soci::rowset<soci::row> indexed = (dbc->prepare <<
 R"zzz(
-SELECT trID, volumes_table.uuid, mount 
-ORDER BY trID
-FROM tracking_table LEFT JOIN volumes_table ON (tracking_table.uuid = volumes_table.uuid);
+SELECT trid, volumes_table.uuid, mount 
+FROM tracking_table LEFT JOIN volumes_table ON (tracking_table.uuid = volumes_table.uuid)
+ORDER BY trid;
 )zzz"
 );
 	ans_.put("result", "OK");
+	ssize_t limit = req_.get<ssize_t>("number", 0);
 	try {
 		ssize_t off = req_.get<ssize_t>("start", 0);
-		ssize_t limit = req_.get<ssize_t>("number", 0);
 		ssize_t cursor = 0;
 		ptree array;
 		for (auto& row : indexed) {
 			auto trID = row.get<int>(0);
+			qDebug() << "Searching vol " << trID;
 			ssize_t start_this_vol = 0;
 			if (cursor < off) {
 				ssize_t nrecord = 0;
 				bool done = false;
 				skip_vol_up_to(trID, off - cursor, pattern, nrecord, done);
 				cursor += nrecord;
+				qDebug() << "vol skips " << nrecord << " records, done: " << done;
 				if (done)
 					continue;
 				start_this_vol = nrecord;
@@ -173,15 +181,26 @@ FROM tracking_table LEFT JOIN volumes_table ON (tracking_table.uuid = volumes_ta
 				                  limit,
 						  array
 						 );
+			{
+				string tmp;
+				array.dump_to(tmp);
+				qDebug() << "After vol " << trID << ": " << tmp.c_str();
+			}
 			cursor += nrow;
 			limit -= nrow;
-			if (limit <= 0)
+			if (limit <= 0) {
+				ans_.put("result", "OK Partial");
 				break;
+			}
 		}
 		ans_.swap_child_with("items", array);
 	} catch(std::exception& e) {
 		ans_.put("result", "Error");
 		ans_.put("reason", e.what());
+	}
+	if (limit <= 0) {
+		// Partial content, cache current query.
+		set_unique_key(SearcherFab::get_cache().cache(shared_from_this()));
 	}
 	return ans_;
 }
@@ -196,7 +215,7 @@ RegexSearcher::skip_vol_up_to(long long volid,
 	NumberOfResults volrecord = known_nresults_[volid];
 	auto status = volrecord.status;
 	auto number = volrecord.number;
-	if (status != NumberOfResults::FINAL) {
+	if (status == NumberOfResults::FINAL) {
 		if (number <= skip_up_to) {
 			nrecord = number;
 			done = true;
@@ -232,6 +251,12 @@ RegexSearcher::search_vol(long long volid,
                           ptree result_array,
 			  bool drop)
 {
+	qDebug() << "volid: " << volid
+	         << " mount: " << mount.c_str()
+		 << " pattern: " << pattern.c_str()
+		 << " start: " << start
+		 << " limit: " << limit
+		 << " drop: " << drop;
 	if (volid < 0)
 		return -1;
 	auto dbc = DatabaseRegistry::get_shared_dbc();
@@ -240,8 +265,8 @@ RegexSearcher::search_vol(long long volid,
 	soci::rowset<soci::row> indexed = (dbc->prepare <<
 			sqlprovider->query_volume(volid, query::volume::REGEX_NAME_MATCH),
 			soci::use(pattern),
-			soci::use(limit),
-			soci::use(start)
+			soci::use(start),
+			soci::use(limit)
 		);
 	ssize_t nrecord = 0;
 	if (!drop) {

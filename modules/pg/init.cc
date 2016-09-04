@@ -31,8 +31,11 @@ int cappuccino_filer_module_init()
 		auto database = reg.get<string>("pg.database");
 		auto lambda = [database] () -> DbConnection {
 			string conf = "dbname='" + database + "'"; 
-			return std::make_shared<soci::session>("postgresql",
+			auto ret = std::make_shared<soci::session>("postgresql",
 					conf);
+			(*ret) << "SET CLIENT_ENCODING TO 'SQL_ASCII';";
+			ret->commit();
+			return ret;
 		};
 		DatabaseRegistry::register_database(lambda);
 		DatabaseRegistry::install_sql_provider(std::make_unique<PGProvider>());

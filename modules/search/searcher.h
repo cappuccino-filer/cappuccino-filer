@@ -10,13 +10,15 @@ class SearchCache;
 class SearcherFab {
 public:
 	static std::shared_ptr<Searcher> fab(ptree);
+
+	static SearchCache& get_cache() { return cache_; }
 private:
 	static SearchCache cache_;
 };
 
 struct uint256_t;
 
-class Searcher {
+class Searcher : public std::enable_shared_from_this<Searcher> {
 public:
 	Searcher(ptree r);
 	virtual ~Searcher();
