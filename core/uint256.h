@@ -1,6 +1,9 @@
 #ifndef UINT256_H
 #define UINT256_H
 
+#include <stdint.h>
+#include <string>
+
 struct uint256_t
 {
 	    uint64_t bits[4];
