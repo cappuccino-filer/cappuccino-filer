@@ -18,6 +18,9 @@
 		</p>
 	</md-list-item>
 </md-list>
+<button md-button (click)="doNextSearch()" [disabled]="disableNextPage">
+	{{nextPageText}}
+</button>
 <!--
 <ul class="searchresult" >
 	<li >

@@ -9,9 +9,11 @@ export class SearchResult {
 
 export class SearchReply {
 	cat: string;
-	code: string;
+	result: string;
 	reason: string;
+	start: number;
 	items: Array<SearchResult>;
+	cache_cookie: string;
 
 	constructor()
 	{

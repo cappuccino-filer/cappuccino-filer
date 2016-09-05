@@ -11,20 +11,24 @@ export class SearchService {
 
 	constructor(private http: Http) { }
 
-	getMatchedFiles(regex:string) : Promise<SearchReply> {
-		let json = JSON.stringify(
-			{
+	getMatchedFiles(regex:string, offset: number, num: number, cookie: string) : Promise<SearchReply> {
+		let json = {
 				cat : "byname",
 				matcher : "regex",
-				pattern : regex
-			});
+				pattern : regex,
+				start : offset,
+				"number" : num
+			};
+		if (cookie != "")
+			json["cache_cookie"] = cookie;
+		let jsonstring = JSON.stringify(json);
 
 		return this.http.post(this.serviceUrl, json, {headers: this.headers})
 			.toPromise()
 			.then(response => response.json())
 			.catch(this.handleError);
 	}
-
+	
 	private handleError(error: any) {
 		console.error('An error occurred', error);
 		return Promise.reject(error.message || error);
