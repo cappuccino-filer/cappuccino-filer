@@ -33,6 +33,8 @@ void Searcher::page(ptree pt)
 	ssize_t number = pt.get<ssize_t>("number", 0);
 	req_.put("start", start);
 	req_.put("number", number);
+	ans_.put("start", start);
+	ans_.put("number", number);
 	qDebug() << "Page Searcher " << this << " to " << start << ", " << number;
 }
 
@@ -45,9 +47,12 @@ public:
 
 	ptree do_search() override
 	{
-		ans_.put("status", reason_);
+		ans_.put("status", "Error");
+		ans_.put("reason", reason_);
 		return ans_;
 	}
+
+	ptree get_ans() { return ans_; }
 private:
 	const char* reason_;
 };
@@ -98,7 +103,23 @@ std::shared_ptr<Searcher> SearcherFab::fab(ptree pt)
 	qDebug() << "Incoming search request: " << tmp.c_str();
 
 	qDebug() << "Incoming search class : " << pt.get<string>("cat", "").c_str();
-	if (pt.get<string>("cat", "") != "byname")
+	string cat = pt.get<string>("cat", "");
+
+	if (cat == "keep alive") {
+		string key = pt.get("cache-cookie", "");
+		if (key.empty())
+			return make_shared<NoGoSearcher>("cache-cookie is missing.");
+		auto ret = make_shared<NoGoSearcher>("");
+		ret->get_ans().put("cache-cookie", key);
+		if (cache_.keep_alive(key)) {
+			ret->get_ans().put("status", "OK");
+		} else {
+			ret->get_ans().put("reason", "Invalid cache");
+		}
+		return ret;
+	}
+
+	if (cat != "byname")
 		return make_shared<NoGoSearcher>("Unsupported search class.");
 
 	if (pt.get("matcher", "") != "regex")
@@ -181,11 +202,13 @@ ORDER BY trid;
 				                  limit,
 						  array
 						 );
+#if 0
 			{
 				string tmp;
 				array.dump_to(tmp);
 				qDebug() << "After vol " << trID << ": " << tmp.c_str();
 			}
+#endif
 			cursor += nrow;
 			limit -= nrow;
 			if (limit <= 0) {

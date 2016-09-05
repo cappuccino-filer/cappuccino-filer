@@ -9,15 +9,36 @@
 #include <pref.h>
 #include <json.h>
 #include "searcher.h"
+#include "search_cache.h"
+#include <QDebug>
 
 namespace {
 
+using cache_expunge = caf::atom_constant<caf::atom("expunge")>;
+
+ssize_t get_timeout()
+{
+	auto reg = Pref::instance()->get_registry();
+	return reg.get("searcher.cache_time", 0);
+}
+
 caf::behavior mksearch(caf::event_based_actor* self)
 {
-	return { [](shared_ptree pt)
+	return { [self](shared_ptree pt)
 		{
+			auto timeout = get_timeout();
+			if (timeout > 0)
+				self->delayed_send(self, std::chrono::seconds(timeout + 1), cache_expunge::value);
 			auto searcher = SearcherFab::fab(pt);
 			return searcher->do_search();
+		},
+		[self](cache_expunge) 
+		{
+			auto timeout = get_timeout();
+			qDebug() << "Expunge old cache lines";
+			SearcherFab::get_cache().expunge_outdated_lines();
+			if (SearcherFab::get_cache().size() > 0 && timeout > 0)
+				self->delayed_send(self, std::chrono::seconds(timeout + 1), cache_expunge::value);
 		}
 	};
 }

@@ -3,6 +3,6 @@
 "matcher" : "regex",
 "pattern" : ".*\\.m4a",
 "sortby" : "<reserved>",
-"start" : 0,
-"number" : 100
+"start" : "0",
+"number" : "20"
 }

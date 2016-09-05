@@ -205,6 +205,8 @@ void Pref::load_defaults()
 	reg_.put("pg.debug", true);
 	reg_.put("portal.webroot", "../webroot");
 	reg_.put("searcher.limits", 100);
+	reg_.put("searcher.cache_time", 300);
+	reg_.put("searcher.cache_limit", 128);
 }
 
 Pref* Pref::instance()

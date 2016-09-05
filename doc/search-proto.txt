@@ -26,7 +26,8 @@ implemented.
 	"cat" : "search result",
 	"result" : "OK"/"OK Partial",
 	"reason" : <optional for error reason>,
-	"start" : <reserved>,
+	"start" : <number>,
+	"number" : <requested number>,
 	"items" : [
 		{
 			"filename" : <file name>,
@@ -45,3 +46,9 @@ Note:
 	- For files on offline volumes, "path" must start with the unique
 	  tracking ID (trID) of the volume.
 	- "path" must use "/" as separator, even under windows.
+	  
+=== Cache management
+{
+	"cat" : "keep alive"
+	"cache-cookie" : <string>
+};
