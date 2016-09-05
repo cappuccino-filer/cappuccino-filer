@@ -32,7 +32,7 @@ SearchCache::find(ptree pt)
 {
 	std::lock_guard<std::mutex> guard(mutex_);
 
-	std::string cookie = pt.get("cache-cookie", "0x0");
+	std::string cookie = pt.get("cache_cookie", "0x0");
 	uint256_t key;
 	hex_to_uint256(cookie, key);
 	// FIXME: improve the algorithm

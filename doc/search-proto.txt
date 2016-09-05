@@ -37,7 +37,7 @@ implemented.
 		},
 		...
 	],
-	"cache-cookie" : <string> // Cookie of the result cache.
+	"cache_cookie" : <string> // Cookie of the result cache.
 };
 
 Note:

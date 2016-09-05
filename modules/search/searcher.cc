@@ -24,7 +24,7 @@ Searcher::~Searcher()
 
 void Searcher::set_unique_key(const uint256_t& key)
 {
-	ans_.put("cache-cookie", uint256_to_hex(key));
+	ans_.put("cache_cookie", uint256_to_hex(key));
 }
 
 void Searcher::page(ptree pt)
@@ -106,11 +106,11 @@ std::shared_ptr<Searcher> SearcherFab::fab(ptree pt)
 	string cat = pt.get<string>("cat", "");
 
 	if (cat == "keep alive") {
-		string key = pt.get("cache-cookie", "");
+		string key = pt.get("cache_cookie", "");
 		if (key.empty())
-			return make_shared<NoGoSearcher>("cache-cookie is missing.");
+			return make_shared<NoGoSearcher>("cache_cookie is missing.");
 		auto ret = make_shared<NoGoSearcher>("");
-		ret->get_ans().put("cache-cookie", key);
+		ret->get_ans().put("cache_cookie", key);
 		if (cache_.keep_alive(key)) {
 			ret->get_ans().put("status", "OK");
 		} else {
