@@ -112,7 +112,7 @@ WITH RECURSIVE fstree AS
 ((SELECT name, dnode, inode, CAST('' AS text) AS path
 FROM vol_#id_dentry_table
 WHERE name ~ :p
-ORDER BY inode ASC
+ORDER BY dnode ASC, inode ASC
 OFFSET :off
 LIMIT :lim
 )
