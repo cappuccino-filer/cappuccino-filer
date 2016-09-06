@@ -63,6 +63,7 @@ include_directories(${SOCI_BIN}/include/)
 # Main program
 AUX_SOURCE_DIRECTORY(apps/backend/ APP_BACKEND_SRC)
 ADD_EXECUTABLE(cappuccino-filer ${APP_BACKEND_SRC})
+SET_PROPERTY(TARGET cappuccino-filer PROPERTY CXX_STANDARD 14)
 QT5_USE_MODULES(cappuccino-filer Core)
 
 # Core library
@@ -70,6 +71,7 @@ AUX_SOURCE_DIRECTORY(core CORE_MSRC)
 ADD_LIBRARY(core SHARED ${CORE_MSRC})
 ADD_DEPENDENCIES(core CAF)
 TARGET_LINK_LIBRARIES(core Qt5::Core ${CAF_LIBS})
+SET_PROPERTY(TARGET core PROPERTY CXX_STANDARD 14)
 
 # Modules
 FUNCTION(ADD_MODULE name)
@@ -77,11 +79,13 @@ FUNCTION(ADD_MODULE name)
 	ADD_LIBRARY(${name} SHARED ${TMP_MSRC})
 	TARGET_LINK_LIBRARIES(${name} core) # Every module links to core
 	SET_TARGET_PROPERTIES(${name} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/modules)
+    SET_PROPERTY(TARGET ${name} PROPERTY CXX_STANDARD 14)
 ENDFUNCTION()
 FUNCTION(ADD_DEMO name)
 	ADD_LIBRARY(${name} SHARED modules/demos/${name}.cc)
 	TARGET_LINK_LIBRARIES(${name} core) # Every module links to core
 	SET_TARGET_PROPERTIES(${name} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/modules)
+    SET_PROPERTY(TARGET ${name} PROPERTY CXX_STANDARD 14)
 ENDFUNCTION()
 
 ## portal (embedded httpd) 
@@ -100,6 +104,7 @@ TARGET_LINK_LIBRARIES(storage ${SOCI_CORE_LIBRARY})
 ### storage/updatedb
 AUX_SOURCE_DIRECTORY(modules/storage/tools UPDATEDB_SRC)
 ADD_EXECUTABLE(updatedb ${UPDATEDB_SRC})
+SET_PROPERTY(TARGET updatedb PROPERTY CXX_STANDARD 14)
 
 ## search
 ADD_MODULE(search)
@@ -115,5 +120,7 @@ TARGET_LINK_LIBRARIES(04-actor-basics ${CAF_LIBS})
 
 TARGET_LINK_LIBRARIES(cappuccino-filer core)
 TARGET_LINK_LIBRARIES(updatedb storage core ${SOCI_CORE_LIBRARY})
+
+message(status ${CMAKE_CXX_FLAGS})
 
 # vim: tw=0
