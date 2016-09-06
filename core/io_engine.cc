@@ -1,5 +1,6 @@
-#include <stdlib.h>
 #include <QDebug> 
+#include <iostream>
+#include <limits>
 #include "io_engine.h"
 
 void io_engine::init()
@@ -10,5 +11,5 @@ void io_engine::init()
 void io_engine::run()
 {
 	qDebug() << __PRETTY_FUNCTION__;
-	system("read");
+	std::cin.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
 }
