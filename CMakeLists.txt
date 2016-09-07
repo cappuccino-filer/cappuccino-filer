@@ -14,8 +14,9 @@ include_directories(${CMAKE_SOURCE_DIR}/core)
 # C++11 and Debug
 # Note: we focus on gcc/clang right now, so we uses compiler specific solutions.
 find_package(Qt5 COMPONENTS Core Widgets REQUIRED)
-set(CMAKE_CXX_FLAGS "--std=c++14 -g -ggdb3 -Wno-deprecated-declarations -Wno-deprecated ${CMAKE_CXX_FLAGS} ${Qt5Widgets_EXECUTABLE_COMPILE_FLAGS}")
+set(CMAKE_CXX_FLAGS "-g -ggdb3 -Wno-deprecated-declarations -Wno-deprecated ${CMAKE_CXX_FLAGS} ${Qt5Widgets_EXECUTABLE_COMPILE_FLAGS}")
 set(CMAKE_EXE_LINKER_FLAGS "-g")
+set(CMAKE_CXX_STANDARD 14)
 include_directories(${Qt5Core_INCLUDE_DIRS})
 
 # Boost
@@ -63,7 +64,6 @@ include_directories(${SOCI_BIN}/include/)
 # Main program
 AUX_SOURCE_DIRECTORY(apps/backend/ APP_BACKEND_SRC)
 ADD_EXECUTABLE(cappuccino-filer ${APP_BACKEND_SRC})
-SET_PROPERTY(TARGET cappuccino-filer PROPERTY CXX_STANDARD 14)
 QT5_USE_MODULES(cappuccino-filer Core)
 
 # Core library
@@ -71,7 +71,6 @@ AUX_SOURCE_DIRECTORY(core CORE_MSRC)
 ADD_LIBRARY(core SHARED ${CORE_MSRC})
 ADD_DEPENDENCIES(core CAF)
 TARGET_LINK_LIBRARIES(core Qt5::Core ${CAF_LIBS})
-SET_PROPERTY(TARGET core PROPERTY CXX_STANDARD 14)
 
 # Modules
 FUNCTION(ADD_MODULE name)
@@ -79,13 +78,11 @@ FUNCTION(ADD_MODULE name)
 	ADD_LIBRARY(${name} SHARED ${TMP_MSRC})
 	TARGET_LINK_LIBRARIES(${name} core) # Every module links to core
 	SET_TARGET_PROPERTIES(${name} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/modules)
-    SET_PROPERTY(TARGET ${name} PROPERTY CXX_STANDARD 14)
 ENDFUNCTION()
 FUNCTION(ADD_DEMO name)
 	ADD_LIBRARY(${name} SHARED modules/demos/${name}.cc)
 	TARGET_LINK_LIBRARIES(${name} core) # Every module links to core
 	SET_TARGET_PROPERTIES(${name} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/modules)
-    SET_PROPERTY(TARGET ${name} PROPERTY CXX_STANDARD 14)
 ENDFUNCTION()
 
 ## portal (embedded httpd) 
@@ -104,7 +101,6 @@ TARGET_LINK_LIBRARIES(storage ${SOCI_CORE_LIBRARY})
 ### storage/updatedb
 AUX_SOURCE_DIRECTORY(modules/storage/tools UPDATEDB_SRC)
 ADD_EXECUTABLE(updatedb ${UPDATEDB_SRC})
-SET_PROPERTY(TARGET updatedb PROPERTY CXX_STANDARD 14)
 
 ## search
 ADD_MODULE(search)
