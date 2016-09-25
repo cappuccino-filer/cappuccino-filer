@@ -110,7 +110,7 @@ namespace portal {
 		// by configuration
 		if (!ifs.good()) {
 			notFound = true;
-			ifs.open(webroot + string("/404.html"), ifstream::in);
+			ifs.open(webroot + string("/assets/404.html"), ifstream::in);
 		}
 		assert(ifs.good());
 
@@ -146,17 +146,17 @@ namespace portal {
 
 	void render_bad_request(HttpServer::Response& response)
 	{
-		render(response, "400.html");
+		render(response, "/assets/400.html");
 	}
 
 	void render_not_found(HttpServer::Response& response)
 	{
-		render(response, "404.html");
+		render(response, "/assets/404.html");
 	}
 
 	void render_internal_server_error(HttpServer::Response& response)
 	{
-		render(response, "500.html");
+		render(response, "/assert/500.html");
 	}
 
 };
