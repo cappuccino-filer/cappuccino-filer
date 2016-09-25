@@ -1,0 +1,23 @@
+<!-- TODO: Add sort support -->
+<div class="search-input-button-div">
+	<md-input #searchBox type="text"
+		      placeholder="Search File with Regular Expression"
+	(keyup.enter)="doSearch(searchBox.value)" >
+	</md-input>
+	<button md-button (click)="doSearch(searchBox.value)">
+		Search
+	</button>
+</div>
+
+<label> {{statusString}} </label>
+<md-list>
+	<md-list-item *ngFor="let row of rows">
+		<h3 md-line> {{row.name}} </h3>
+		<p md-line>
+		{{row.path}}
+		</p>
+	</md-list-item>
+</md-list>
+<button md-button (click)="doNextSearch()" [disabled]="disableNextPage">
+	{{nextPageText}}
+</button>

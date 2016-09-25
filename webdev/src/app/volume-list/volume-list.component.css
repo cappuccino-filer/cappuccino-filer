@@ -1,0 +1,16 @@
+.selected {
+	background-color: #CFD8DC !important;
+	color: white;
+}
+md-list-item {
+}
+md-list-item h3 {
+	width: 500px;
+}
+md-list-item h3 span,input {
+	margin: 5px
+}
+div button {
+	float: left;
+}
+

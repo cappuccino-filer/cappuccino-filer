@@ -1,0 +1,15 @@
+<h1>{{title}}</h1>
+<div>
+<md-list>
+	<md-list-item *ngFor="let vol of volinfo">
+		<h3 md-line>
+			<input type="checkbox" [(ngModel)]="vol.tracking" />
+			<span>{{vol.mount}}</span>
+		</h3>
+		<p md-line>
+			{{vol.uuid}}
+		</p>
+	</md-list-item>
+</md-list>
+<button md-button (click)="doSubmit()">Apply</button>
+</div>
