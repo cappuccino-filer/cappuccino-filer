@@ -1,9 +1,19 @@
 <h1>
   {{title}}(app.component.html)
 </h1>
-<app-volume-list>
-	Loading app-volume-list..
-</app-volume-list>
-<app-name-search>
-	Loading app-name-search..
-</app-name-search>
+<article [class.dark-theme]="isDarkTheme">
+	<div>
+	<md-card>
+		<app-volume-list>
+			Loading app-volume-list..
+		</app-volume-list>
+	</md-card>
+	</div>
+	<div>
+	<md-card>
+		<app-name-search>
+			Loading app-name-search..
+		</app-name-search>
+	</md-card>
+	</div>
+</article>

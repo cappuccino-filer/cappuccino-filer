@@ -7,9 +7,10 @@ import 'hammerjs';
 import { AppComponent } from './app.component';
 import { VolumeListComponent } from './volume-list/volume-list.component';
 
-import { MdInputModule } from '@angular2-material/input/input';
-import { MdListModule } from '@angular2-material/list/list';
-import { MdButtonModule } from '@angular2-material/button';
+//import { MdInputModule } from '@angular/material/input/input';
+//import { MdListModule } from '@angular/material/list/list';
+//import { MdButtonModule } from '@angular/material/button';
+import { MaterialModule } from '@angular/material';
 import { NameSearchComponent } from './name-search/name-search.component';
 
 @NgModule({
@@ -22,9 +23,10 @@ import { NameSearchComponent } from './name-search/name-search.component';
     BrowserModule,
     FormsModule,
     HttpModule,
-    MdInputModule.forRoot(),
-    MdListModule.forRoot(),
-    MdButtonModule.forRoot()
+    MaterialModule.forRoot()
+    //MdInputModule.forRoot(),
+    //MdListModule.forRoot(),
+    //MdButtonModule.forRoot()
   ],
   providers: [],
   bootstrap: [AppComponent]

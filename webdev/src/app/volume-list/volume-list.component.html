@@ -1,15 +1,15 @@
 <h1>{{title}}</h1>
 <div>
-<md-list>
+<md-list color="primary">
 	<md-list-item *ngFor="let vol of volinfo">
-		<h3 md-line>
+		<h3 color="primary" md-line>
 			<input type="checkbox" [(ngModel)]="vol.tracking" />
 			<span>{{vol.mount}}</span>
 		</h3>
-		<p md-line>
+		<p color="primary" md-line>
 			{{vol.uuid}}
 		</p>
 	</md-list-item>
 </md-list>
-<button md-button (click)="doSubmit()">Apply</button>
+<button color="accent" md-button (click)="doSubmit()">Apply</button>
 </div>
