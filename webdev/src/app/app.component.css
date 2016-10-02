@@ -1,3 +1,25 @@
-md-card {
-	margin: 20px;
+body {
+    margin: 0px!important;
+}
+
+md-card.plugin-container {
+    margin: 20px;
+    margin-top: 0px!important;
+}
+
+md-card.volume-card {
+    border: 1px solid;
+    md-icon {
+        font-size: 72px;
+    };
+    figure {
+        height: auto!important;
+    };
+}
+
+.card-toolbar {
+    margin: 20px;
+    margin-bottom: 0px!important;
+    border:1px;
+    border-radius: 15px!important;
 }

@@ -1,19 +1,33 @@
-<h1>
-  {{title}}(app.component.html)
-</h1>
-<article [class.dark-theme]="isDarkTheme">
-	<div>
-	<md-card>
-		<app-volume-list>
-			Loading app-volume-list..
-		</app-volume-list>
-	</md-card>
-	</div>
-	<div>
-	<md-card>
-		<app-name-search>
-			Loading app-name-search..
-		</app-name-search>
-	</md-card>
-	</div>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+<section layout="row" layout-sm="column" layout-align="center center" layout-wrap>
+    <md-toolbar color="primary">
+      <span><md-icon>apps</md-icon></span>
+      <span>CAPPUCINO-FILER</span>
+      <span style="flex: 1 1 auto;"></span>
+      <button md-button class="md-icon-button" aria-label="Settings">
+        <md-icon>settings</md-icon>
+      </button>
+    </md-toolbar>
+</section>
+
+<article [class.dark-theme]="isDarkTheme" layout="row">
+    <md-tab-group>
+        <md-tab>
+            <template md-tab-label>VOLUME TRACKER</template>
+            <template md-tab-content>
+                <app-volume-list>
+                    Loading app-volume-list..
+                </app-volume-list>
+            </template>
+        </md-tab>
+        <md-tab>
+            <template md-tab-label>FILE SEARCH</template>
+            <template md-tab-content>
+                <app-name-search>
+                    Loading app-name-search..
+                </app-name-search>
+            </template>
+        </md-tab>
+    </md-tab-group>
 </article>

@@ -7,9 +7,6 @@ import 'hammerjs';
 import { AppComponent } from './app.component';
 import { VolumeListComponent } from './volume-list/volume-list.component';
 
-//import { MdInputModule } from '@angular/material/input/input';
-//import { MdListModule } from '@angular/material/list/list';
-//import { MdButtonModule } from '@angular/material/button';
 import { MaterialModule } from '@angular/material';
 import { NameSearchComponent } from './name-search/name-search.component';
 
@@ -24,9 +21,6 @@ import { NameSearchComponent } from './name-search/name-search.component';
     FormsModule,
     HttpModule,
     MaterialModule.forRoot()
-    //MdInputModule.forRoot(),
-    //MdListModule.forRoot(),
-    //MdButtonModule.forRoot()
   ],
   providers: [],
   bootstrap: [AppComponent]

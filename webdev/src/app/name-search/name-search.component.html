@@ -1,23 +1,37 @@
 <!-- TODO: Add sort support -->
-<div class="search-input-button-div">
-	<md-input #searchBox type="text"
-		      placeholder="Search File with Regular Expression"
-	(keyup.enter)="doSearch(searchBox.value)" >
-	</md-input>
-	<button md-button (click)="doSearch(searchBox.value)">
-		Search
-	</button>
-</div>
+<!-- TODO: Add paging support -->
+<section layout="row" layout-sm="column" layout-align="center center" layout-wrap>
+    <div class="card-toolbar">
+        <md-toolbar class="md-primary">
+            <div class="md-toolbar-layout" layout="row" layout-sm="column" layout-align="center center" layout-wrap>
+                <md-toolbar-row color="primary">
+                    <span>FILE SEARCH</span>
+                </md-toolbar-row>
+            </div>
+        </md-toolbar>
+    </div>
+    <md-card class="plugin-container">
+        <div class="search-input-button-div">
+            <md-input #searchBox type="text"
+                      placeholder="Search File with Regular Expression"
+                      (keyup.enter)="doSearch(searchBox.value)" >
+            </md-input>
+            <button md-raised-button class="md-raised md-primary" (click)="doSearch(searchBox.value)">
+                SEARCH
+            </button>
+        </div>
 
-<label> {{statusString}} </label>
-<md-list>
-	<md-list-item *ngFor="let row of rows">
-		<h3 md-line> {{row.name}} </h3>
-		<p md-line>
-		{{row.path}}
-		</p>
-	</md-list-item>
-</md-list>
-<button md-button (click)="doNextSearch()" [disabled]="disableNextPage">
-	{{nextPageText}}
-</button>
+        <md-card-subtitle>
+            <label> {{statusString}} </label>
+        </md-card-subtitle>
+
+        <md-card-content>
+            <md-list>
+                <md-list-item *ngFor="let row of rows">
+                    <h3 md-line> {{row.name}} </h3>
+                    <p md-line> {{row.path}} </p>
+                </md-list-item>
+            </md-list>
+        </md-card-content>
+    </md-card>
+</section>
