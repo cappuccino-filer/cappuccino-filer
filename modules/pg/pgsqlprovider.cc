@@ -21,6 +21,27 @@ CREATE TABLE IF NOT EXISTS tracking_table(
 	root_inode BIGINT,
 	FOREIGN KEY(uuid) REFERENCES volumes_table(uuid)
 );
+CREATE TABLE IF NOT EXISTS tag_table (
+	id SERIAL PRIMARY KEY,
+	name TEXT
+);
+CREATE TABLE IF NOT EXISTS tag_relation (
+	relid SERIAL PRIMARY KEY
+);
+CREATE TABLE IF NOT EXISTS tag_first_order_relation (
+	relid INTEGER REFERENCES tag_relation (relid),
+	taggee INTEGER REFERENCES tag_table(id),
+	tagger INTEGER REFERENCES tag_table(id),
+	p REAL DEFAULT 1.0,
+	PRIMARY KEY (taggee, tagger)
+);
+CREATE TABLE IF NOT EXISTS tag_higher_order_relation (
+	relid INTEGER REFERENCES tag_relation (relid),
+	taggee INTEGER REFERENCES tag_relation (relid),
+	tagger INTEGER REFERENCES tag_table (id),
+	p REAL DEFAULT 1.0,
+	PRIMARY KEY (taggee, tagger)
+);
 )zzz"
 		},
 		{
@@ -65,9 +86,22 @@ R"zzz(
 CREATE TABLE IF NOT EXISTS vol_#id_inode_table (inode BIGINT PRIMARY KEY, size
 BIGINT NOT NULL, hash BYTEA NULL, mtime_sec BIGINT NULL, mtime_nsec BIGINT
 NULL, last_check TIMESTAMP WITH TIME ZONE NULL, ack BOOLEAN);
-CREATE UNIQUE INDEX vol_#id_idx_inode ON vol_#id_inode_table (inode);
+CREATE UNIQUE INDEX IF NOT EXISTS vol_#id_idx_inode ON vol_#id_inode_table (inode);
 CREATE TABLE IF NOT EXISTS vol_#id_dentry_table (dnode BIGINT NOT NULL, name VARCHAR(255) NOT NULL, inode BIGINT NOT NULL, ack BOOLEAN, PRIMARY KEY (dnode, name) );
-CREATE UNIQUE INDEX vol_#id_idx_dentry ON vol_#id_dentry_table (dnode, name);
+CREATE UNIQUE INDEX IF NOT EXISTS vol_#id_idx_dentry ON vol_#id_dentry_table (dnode, name);
+CREATE TABLE IF NOT EXISTS vol_#id_file_tag_relation (relid BIGSERIAL PRIMARY KEY);
+CREATE TABLE IF NOT EXISTS vol_#id_file_tag_first_order (
+	relid BIGINT REFERENCES vol_#id_file_tag_relation (relid),
+	taggee BIGINT REFERENCES vol_#id_inode_table (inode),
+	tagger INTEGER REFERENCES tag_table (id),
+	p REAL DEFAULT 1.0,
+	PRIMARY KEY (taggee, tagger) );
+CREATE TABLE IF NOT EXISTS vol_#id_file_tag_higher_order (
+	relid BIGINT REFERENCES vol_#id_file_tag_relation (relid),
+	taggee BIGINT REFERENCES vol_#id_file_tag_relation (relid),
+	tagger INTEGER REFERENCES tag_table(id),
+	p REAL DEFAULT 1.0,
+	PRIMARY KEY (taggee, tagger) );
 )zzz"
 		},
 		{

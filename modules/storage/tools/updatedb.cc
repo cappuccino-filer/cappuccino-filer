@@ -139,8 +139,16 @@ namespace {
 		/*
 		 * Create table if not exists.
 		 */
-		if (need_create_volume_table) {
+		if (volid >= 0) {
+			/*
+ 			 * Unconditionally execution on valid volid, because
+			 * we may add additional tables for each volume in
+			 * later versions, and we don't have a proper
+			 * upgrade mechanism.
+			 */
 			(*db) << sql_provider->query_volume(volid, query::volume::CREATE);
+		}
+		if (need_create_volume_table) {
 			(*db) << sql_provider->query_volume(volid, query::volume::UPDATE_ROOT_INODE), soci::use(root_ino);
 		}
 		tr1.commit();
