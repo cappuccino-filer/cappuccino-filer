@@ -14,3 +14,8 @@ div button {
 	float: left;
 }
 
+.volume-icon {
+    width: 96px!important;
+    height: 96px!important;
+    font-size: 96px!important;
+}
