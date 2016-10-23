@@ -2,6 +2,7 @@
 #define SQL_PROVIDER_H
 
 #include <string>
+#include <set>
 #include <map>
 #include <stdint.h>
 
@@ -11,6 +12,7 @@ public:
 
 	std::string query(int32_t cat, int32_t func) const; // Returns corresponding SQL string, this is sufficient for most cases
 	std::string query_volume(int vol, int func) const; // Return the SQL string for the specified volume.
+	std::string query_where_in(int32_t cat, int32_t func, const std::set<int>&) const;
 protected:
 	std::map<uint64_t, std::string> sqls_;
 };

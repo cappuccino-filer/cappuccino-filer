@@ -5,6 +5,8 @@ namespace query {
 	enum {
 		CAT_META,
 		CAT_VOLUME,
+		CAT_TAG,
+		CAT_FILE_TAG,
 	};
 
 	namespace meta {
@@ -29,6 +31,25 @@ namespace query {
 			UPSERT_DENTRY,
 			UPSERT_INODE,
 			REGEX_NAME_MATCH,
+		};
+	};
+
+	namespace tag {
+		constexpr int cat_id = CAT_TAG;
+		enum {
+			TABLE_CREATION,
+			FUNCTION_CREATION,
+			CREATE,
+			LIST,
+			NAME_TO_ID,
+			NAME_TO_ID_EX,
+			DELETE,
+			TAG_A_TAG,
+			TAG_A_RELATION,
+			FIND_TAG_TAG_RELATION,
+			UPSERT_TAG_TAG_RELATION,
+			FIND_REL_TAG_RELATION,
+			UPSERT_REL_TAG_RELATION,
 		};
 	};
 };

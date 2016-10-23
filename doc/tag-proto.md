@@ -19,6 +19,25 @@ Response
 }
 ```
 
+=== List Tag
+Request:
+```
+{
+	"cat" : "list",
+	"offset" : <integer>
+	"limit" : <integer>
+}
+```
+
+Response
+```
+{
+	"cat" : "list",
+	"result" : "OK",
+	"tags" : [ { "id" : <integer> , "name": <string> }, ...]
+}
+```
+
 === Get ID from name
 Request:
 ```
@@ -53,9 +72,9 @@ Request:
 ```
 {
 	"cat" : "tagtag",
-	"taggee" : <integer>,
-	"tagger" : <integer>,
-	"probability" : <real> // set to values < -1 for find function
+	"taggee" : <integer>, // negative value means "any"
+	"tagger" : <integer>, // negative value means "any"
+	"probability" : <real> // value must be < -1 to enable find function
 }
 ```
 
@@ -63,8 +82,14 @@ Response
 ```
 {
 	"cat" : "tagtag",
-	"result" : "OK"/"Tag not found"/"Relationship not found" 
-	"relid" : <integer>
+	"result" : "OK"/"Tag not found"/"Relationship not found",
+	"rels" : [
+		{ "relid"  : ... ,
+		  "taggee" : ... ,
+		  "tagger" : ... ,
+		  "probability" : ...
+		},
+	] //<list of tag-tag relation objects>,
 }
 ```
 
