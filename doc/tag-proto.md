@@ -15,6 +15,7 @@ Response
 {
 	"cat" : "create",
 	"result" : "OK",
+	"name" : <string>,
 	"tagid" : <integer>
 }
 ```

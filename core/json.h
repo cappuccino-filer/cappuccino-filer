@@ -68,7 +68,7 @@ public:
 	template<typename T> void put(const std::string& path, const T& value);
 	template<typename T> void push_back(const T& value);
 	void push_back(ptree&& other);
-	void swap_child_with(const std::string& path, ptree& obj);
+	void swap_child_with(const std::string& path, ptree& obj); // Cheap way to attach an json object to another one.
 	ptree dup();
 
 	static ptree create();

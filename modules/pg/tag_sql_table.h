@@ -117,7 +117,7 @@ LANGUAGE plpgsql;
 {
 	SQLINDEX(tag, CREATE),
 R"zzz(
-INSERT INTO tag_table(name) VALUES(:1);
+INSERT INTO tag_table(name) VALUES(:1) RETURNING id;
 )zzz"
 },
 {
