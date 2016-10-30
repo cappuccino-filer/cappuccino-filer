@@ -188,25 +188,17 @@ void Pref::load_defaults()
 	reg_.put("core.libpath", "./modules");
 	reg_.put("core.libexecpath", "./");
 	reg_.put("debug.refresh_database", false);
-	reg_.put("mariadb.host", "localhost");
-	reg_.put("mariadb.user", "test");
-	reg_.put("mariadb.password", "test");
-	reg_.put("mariadb.database", "draft");
-	reg_.put("mariadb.port", 0);
-	reg_.put("mariadb.unix_socket", "");
-	reg_.put("mariadb.client_flag", 0);
-	// CAVEAT: REMOVE THIS IF RELEASED
-	reg_.put("mariadb.debug", true);
 	reg_.put("pg.host", "localhost");
 	reg_.put("pg.database", "draft");
 	reg_.put("pg.port", 0);
 	reg_.put("pg.unix_socket", "");
 	reg_.put("pg.client_flag", 0);
-	reg_.put("pg.debug", true);
+	reg_.put("pg.debug", true); // TODO: Remove this line for release
 	reg_.put("portal.webroot", "../webroot");
 	reg_.put("searcher.limits", 100);
 	reg_.put("searcher.cache_time", 300);
 	reg_.put("searcher.cache_limit", 128);
+	reg_.put("tagger.list.limits", 100);
 }
 
 Pref* Pref::instance()

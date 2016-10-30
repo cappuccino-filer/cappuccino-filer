@@ -118,7 +118,8 @@ namespace {
 #define NAIVE_FAB(T) [](shared_ptree pt)->ActionPtr { return std::make_unique<T>(pt); }
 
 	std::unordered_map<string, fab_function_t> fabmap = {
-		{"create", NAIVE_FAB(CreateTag) }
+		{"create", NAIVE_FAB(CreateTag) },
+		{"list", NAIVE_FAB(ListTag) }
 #if 0 // Disable them first.
 		, {"name2id", NAIVE_FAB(LocateTag) }
 		, {"tagtag", NAIVE_FAB(TagAnotherTag) }

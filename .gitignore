@@ -40,4 +40,4 @@ build/
 webroot/node_modules/
 
 modules/portal/doc/
-scripts/*.json
+scripts/*resp.json
