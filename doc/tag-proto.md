@@ -62,8 +62,9 @@ Response
 ```
 {
 	"cat" : "name2id",
+	"name" : <string>,
 	"result" : "OK"/"Not found", 
-	"tagid" : <list of integers>
+	"tagids" : <list of integers>
 }
 ```
 

@@ -14,7 +14,12 @@ caf::behavior mktag(caf::event_based_actor* self)
 	return { [self](shared_ptree pt)
 		{
 			auto tagaction = TagActionFab::fab(pt);
-			return tagaction->act();
+			try {
+				return tagaction->act();
+			} catch (std::exception& e) {
+				qDebug() << e.what();
+			}
+			return ptree();
 		}
 	};
 }

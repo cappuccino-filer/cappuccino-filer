@@ -33,7 +33,7 @@ RETURNS SETOF tag_table AS
 $BODY$
 BEGIN
 	RETURN QUERY SELECT * FROM tag_table WHERE name = name_in;
-	IF do_upsert AND NOT FOUND THEN
+	IF do_upsert != 0 AND NOT FOUND THEN
 		RETURN QUERY INSERT INTO tag_table(id, name) VALUES(DEFAULT, name_in) RETURNING *;
 	END IF;
 	RETURN ;
@@ -129,7 +129,7 @@ SELECT * FROM tag_table ORDER BY id ASC OFFSET :1 LIMIT :2;
 {
 	SQLINDEX(tag, NAME_TO_ID),
 R"zzz(
-SELECT tag_name_to_id(:1, :2);
+SELECT * FROM tag_name_to_id(:1, :2);
 )zzz"
 },
 {

@@ -6,6 +6,8 @@
 #include <unordered_map>
 #include <string>
 #include <functional>
+#include <set>
+#include <QDebug>
 
 using std::string;
 
@@ -111,6 +113,80 @@ public:
 	}
 };
 
+class LocateTag : public TagAction {
+public:
+	using TagAction::TagAction;
+
+	virtual shared_ptree act() override
+	{
+		ptree ret;
+		bool create_if_not_exists = pt_.get("options.create_if_not_exists", false);
+
+		string name = pt_.get("name", "");
+		if (name.empty()) {
+			render_fail(ret, "Invalid tag name");
+			return ret;
+		}
+		
+		try {
+			const ptree cpt = pt_;
+			ptree constraints = cpt.get_child("constraints");
+			ret = handle(name, create_if_not_exists, &constraints);
+		} catch (ptree::bad_path& e) {
+			ret = handle(name, create_if_not_exists, nullptr);
+		}
+		return ret;
+	}
+protected:
+
+	ptree render_taglist(soci::rowset<soci::row>& taglist)
+	{
+		ptree ret, array;
+		render_ok(ret);
+		ret.put("name", pt_.get("name", ""));
+		for (const auto& row: taglist) {
+			array.push_back(row.get<int>(0));
+		}
+		if (array.size() > 0) {
+			ret.swap_child_with("tagids", array);
+		} else {
+			ret.put("result", "Not found");
+			ret.put("tagids", nullptr);
+		}
+		return ret;
+	}
+
+	shared_ptree handle(const string& name, int create_if_not_exists, const ptree* constraints)
+	{
+		auto dbc = DatabaseRegistry::get_shared_dbc();
+		if (!constraints) {
+			//qDebug() << "Handle: " << name.c_str() << "\tcreate: " << create_if_not_exists << "\tconstraints: " << constraints;
+			soci::rowset<soci::row> taglist = (dbc->prepare <<
+				RETRIVE_SQL_QUERY(query::tag, NAME_TO_ID),
+				soci::use(name),
+				soci::use(create_if_not_exists));
+			return render_taglist(taglist);
+		} else {
+			// FIXME: use a dedicated function to handle more complicated queries.
+			std::set<int> parent_tags;
+			for (size_t i = 0; i < constraints->size(); i++) {
+				const ptree constraint = constraints->get_child(i);
+				if (constraint.get("cat", "") != string("tagged_with"))
+					continue;
+				const ptree tags = constraint.get_child("tags");
+				for (size_t j = 0; j < constraint.size(); j++) {
+					parent_tags.insert(tags.get_child(j).get<int>());
+				}
+			}
+			soci::rowset<soci::row> taglist = (dbc->prepare <<
+				DatabaseRegistry::get_sql_provider()->query_where_in(query::tag::cat_id, query::tag::NAME_TO_ID_EX, parent_tags),
+				soci::use(name),
+				soci::use(create_if_not_exists));
+			return render_taglist(taglist);
+		}
+	}
+};
+
 namespace {
 	typedef std::unique_ptr<TagAction> ActionPtr;
 	typedef std::function<ActionPtr(shared_ptree)> fab_function_t;
@@ -118,10 +194,10 @@ namespace {
 #define NAIVE_FAB(T) [](shared_ptree pt)->ActionPtr { return std::make_unique<T>(pt); }
 
 	std::unordered_map<string, fab_function_t> fabmap = {
-		{"create", NAIVE_FAB(CreateTag) },
-		{"list", NAIVE_FAB(ListTag) }
-#if 0 // Disable them first.
+		{"create", NAIVE_FAB(CreateTag) }
+		, {"list", NAIVE_FAB(ListTag) }
 		, {"name2id", NAIVE_FAB(LocateTag) }
+#if 0 // Disable them first.
 		, {"tagtag", NAIVE_FAB(TagAnotherTag) }
 		, {"tagrel", NAIVE_FAB(TagRelation) }
 #endif
@@ -137,5 +213,6 @@ std::unique_ptr<TagAction> TagActionFab::fab(shared_ptree pt)
 	auto iter = fabmap.find(cat);
 	if (iter == fabmap.end())
 		return std::make_unique<DummyTagAction>(pt);
-	return iter->second(pt);
+	else
+		return iter->second(pt);
 }
