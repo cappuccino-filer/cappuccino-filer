@@ -90,7 +90,7 @@ BEGIN
 		INSERT INTO tag_relation (relid) VALUES(DEFAULT) RETURNING relid INTO relid_ret;
 	END IF;
 	INSERT INTO tag_first_order_relation(relid, taggee, tagger, p)
-		VALUES(relid_ret, taggee_in, tagger_in, p);
+		VALUES(relid_ret, taggee_in, tagger_in, p) RETURNING *;
 END
 $BODY$
 LANGUAGE plpgsql;
@@ -148,32 +148,6 @@ DELETE FROM tag_table WHERE id = :1;
 )zzz"
 },
 {
-	SQLINDEX(tag, TAG_A_TAG),
-R"zzz(
-DO $$
-DECLARE
-	relid_ret INTEGER;
-BEGIN
-	INSERT INTO tag_relation(relid) VALUES(DEFAULT) RETURNING relid INTO relid_ret;
-	INSERT INTO tag_first_order_relation(relid, taggee, tagger, p)
-		VALUES(relid_ret, :1, :2, :3) RETURNING *;
-END $$;
-)zzz"
-},
-{
-	SQLINDEX(tag, TAG_A_RELATION),
-R"zzz(
-DO $$
-DECLARE
-	relid_ret INTEGER;
-BEGIN
-	INSERT INTO tag_relation(relid) VALUES(DEFAULT) RETURNING relid INTO relid_ret;
-	INSERT INTO tag_higher_order_relation(relid, taggee, tagger, p)
-		VALUES(relid_ret, :1, :2, :3) RETURNING *;
-END $$;
-)zzz"
-},
-{
 	SQLINDEX(tag, FIND_TAG_TAG_RELATION),
 R"zzz(
 SELECT * FROM construct_query_find_tag_tag_relation(:1, :2);
@@ -182,7 +156,7 @@ SELECT * FROM construct_query_find_tag_tag_relation(:1, :2);
 {
 	SQLINDEX(tag, UPSERT_TAG_TAG_RELATION),
 R"zzz(
-SELECT upsert_tag_tag_relation(:1, :2, :3);
+SELECT * FROM upsert_tag_tag_relation(:1, :2, :3);
 )zzz"
 },
 {

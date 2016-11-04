@@ -187,6 +187,77 @@ protected:
 	}
 };
 
+class TagAnotherTag : public TagAction {
+public:
+	using TagAction::TagAction;
+	virtual shared_ptree act() override
+	{
+		ptree ret;
+		const ptree pt = pt_;
+		try {
+			int taggee = pt_.get<int>("taggee");
+			int tagger = pt_.get<int>("tagger");
+			double p = pt_.get<double>("probability");
+			if (p < 0)
+				do_find(ret, taggee, tagger);
+			else
+				do_upsert(ret, taggee, tagger, p);
+		} catch (ptree::bad_path& e) {
+			TagAction::render_fail(ret, (string("Missing argument: ") + e.what()).c_str());
+		}
+		return ret;
+	}
+protected:
+	void do_find(ptree& ret, int taggee, int tagger)
+	{
+		auto dbc = DatabaseRegistry::get_shared_dbc();
+		soci::rowset<soci::row> ttrlist  = (dbc->prepare <<
+				RETRIVE_SQL_QUERY(query::tag, FIND_TAG_TAG_RELATION),
+				soci::use(taggee),
+				soci::use(tagger)
+				);
+		ptree array;
+		render_tt_array(array, ttrlist);
+		if (array.size() > 0) {
+			render_ok(ret);
+			ret.swap_child_with("rels", array);
+		} else {
+			render_fail(ret, "Relationship not found");
+		}
+	}
+
+	void do_upsert(ptree& ret, int taggee, int tagger, double p)
+	{
+		auto dbc = DatabaseRegistry::get_shared_dbc();
+		soci::rowset<soci::row> ttrlist  = (dbc->prepare <<
+				RETRIVE_SQL_QUERY(query::tag, UPSERT_TAG_TAG_RELATION),
+				soci::use(taggee),
+				soci::use(tagger),
+				soci::use(p)
+				);
+		ptree array;
+		render_tt_array(array, ttrlist);
+		if (array.size() > 0) {
+			render_ok(ret);
+			ret.swap_child_with("rels", array);
+		} else {
+			render_fail(ret, "Fail to upsert tag-tag relation");
+		}
+	}
+
+	void render_tt_array(ptree& array, soci::rowset<soci::row>& ttrlist)
+	{
+		for (const auto& row: ttrlist) {
+			ptree ttr;
+			ttr.put("relid", row.get<int>(0));
+			ttr.put("taggee", row.get<int>(1));
+			ttr.put("tagger", row.get<int>(2));
+			ttr.put("probability", row.get<float>(3));
+			array.push_back(std::move(ttr));
+		}
+	}
+};
+
 namespace {
 	typedef std::unique_ptr<TagAction> ActionPtr;
 	typedef std::function<ActionPtr(shared_ptree)> fab_function_t;
@@ -197,8 +268,8 @@ namespace {
 		{"create", NAIVE_FAB(CreateTag) }
 		, {"list", NAIVE_FAB(ListTag) }
 		, {"name2id", NAIVE_FAB(LocateTag) }
-#if 0 // Disable them first.
 		, {"tagtag", NAIVE_FAB(TagAnotherTag) }
+#if 0 // Disable them first.
 		, {"tagrel", NAIVE_FAB(TagRelation) }
 #endif
 	};
