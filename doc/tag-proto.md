@@ -138,4 +138,29 @@ Deletion of relationships is similar, just replace "tag" with "rel".
 
 == File's tag (entry: /api/filetag)
 
-// TODO
+=== Assign
+
+Request:
+```
+{
+	"cat" : "assign",
+	"vol" : <integer>, // Volume ID
+	"request" : [
+		{ 
+			"inode" : <string>, // Inode
+			"tags" : [<integer>, ...] , // Array of Tag ID
+			"Ps" : [<real>, ...] // Corresponding Probablities
+		},
+		...
+	]
+}
+```
+
+Response
+```
+{
+	"cat" : "assign",
+	"result" : "OK"/"Error",
+	"reason" : <string> // Diagnostic info
+}
+```
