@@ -70,6 +70,11 @@ void Syncer::sync_cwd(std::vector<std::string>& subdirs)
 					continue;
 		}
 		::fstatat(dirfd(dir), presult->d_name, &fstat_, AT_NO_AUTOMOUNT|AT_SYMLINK_NOFOLLOW);
+		// Reliable check
+		// Note: XFS (and some other FSs) doesn't support d_type so
+		//       this is mandatory.
+		if (!S_ISDIR(fstat_.st_mode) && !S_ISREG(fstat_.st_mode))
+			continue;
 
 		st_inode_->execute(true);
 		d_ino_ = (uint64_t)dirstat.st_ino;
