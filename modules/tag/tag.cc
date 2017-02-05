@@ -259,6 +259,29 @@ protected:
 	}
 };
 
+class DeleteTags : public TagAction {
+public:
+	using TagAction::TagAction;
+
+	virtual shared_ptree act() override
+	{
+		ptree ret;
+		auto dbc = DatabaseRegistry::get_shared_dbc();
+		try {
+			ptree todels = pt_.get_child("tagid");
+			for (size_t i = 0; i < todels.size(); i++) {
+				int tag = todels.get<int>(i);
+				(*dbc) << RETRIVE_SQL_QUERY(query::tag, DELETE), soci::use(tag);
+			}
+		} catch (ptree::bad_path& e) {
+			TagAction::render_fail(ret, (string("Missing argument: ") + e.what()).c_str());
+		}
+		// FIXME: If tag id does not exist.
+		render_ok(ret);
+		return ret;
+	}
+};
+
 namespace {
 	typedef std::unique_ptr<TagAction> ActionPtr;
 	typedef std::function<ActionPtr(shared_ptree)> fab_function_t;
@@ -270,6 +293,7 @@ namespace {
 		, {"list", NAIVE_FAB(ListTag) }
 		, {"name2id", NAIVE_FAB(LocateTag) }
 		, {"tagtag", NAIVE_FAB(TagAnotherTag) }
+		, {"delete_tag", NAIVE_FAB(DeleteTags) }
 #if 0 // Disable them first.
 		, {"tagrel", NAIVE_FAB(TagRelation) }
 #endif
