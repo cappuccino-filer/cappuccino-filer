@@ -112,6 +112,34 @@ BEGIN
 END
 $BODY$
 LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION
+	assign_tag_to_file(_reltbl regclass,
+			_tagtbl regclass,
+			taggee_in BIGINT,
+			tagger_in INTEGER,
+			p REAL)
+RETURNS VOID AS
+$BODY$
+DECLARE
+	relid_ret INTEGER;
+BEGIN
+	SELECT relid INTO relid_ret FROM _reltbl
+		     WHERE taggee = taggee_in AND tagger = tagger_in;
+	IF NOT FOUND THEN
+		IF p == 0.0 THEN
+			RETURN;
+		END IF;
+		INSERT INTO _reltbl(relid) VALUES (DEFAULT) RETURNING relid INTO relid_ret;
+	END IF;
+	IF p == 0.0 THEN
+		DELETE FROM _reltbl WHERE relid = relid_ret;
+		RETURN;
+	END IF;
+	INSERT INTO _tagtbl(relid, taggee, tagger, p) VALUES(relid_ret, taggee_in, tagger_in, p);
+END
+$BODY$
+LANGUAGE plpgsql;
 )zzz"
 },
 {

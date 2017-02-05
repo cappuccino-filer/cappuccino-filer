@@ -76,4 +76,10 @@ FROM vol_#id_dentry_table AS dt
 )
 SELECT name,path FROM fstree WHERE dnode=(SELECT root_inode FROM tracking_table WHERE trID=#id);
 )zzz"
+},
+{
+	SQLINDEX(volume, ASSIGN_TAG),
+R"zzz(
+SELECT assign_tag_to_file(vol_#id_file_tag_relation, vol_#id_file_tag_first_order, :1, :2, :3);
+)zzz"
 }
