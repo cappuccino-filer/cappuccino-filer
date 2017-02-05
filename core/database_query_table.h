@@ -31,6 +31,7 @@ namespace query {
 			UPSERT_DENTRY,
 			UPSERT_INODE,
 			REGEX_NAME_MATCH,
+			ASSIGN_TAG
 		};
 	};
 

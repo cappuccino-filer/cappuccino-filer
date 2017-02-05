@@ -68,7 +68,7 @@ Response
 }
 ```
 
-=== Create/Find/Overwrite tag-tag relationship
+=== Create/Find/Overwrite tag-tag relationship (1st order association)
 
 Request:
 ```
@@ -95,7 +95,7 @@ Response
 }
 ```
 
-=== Create/Find/Overwrite tag-relationship relationship
+=== Create/Find/Overwrite tag-relationship relationship (2nd and higher order association)
 
 Request:
 ```
@@ -145,7 +145,7 @@ Request:
 {
 	"cat" : "assign",
 	"vol" : <integer>, // Volume ID
-	"request" : [
+	"requests" : [
 		{ 
 			"inode" : <string>, // Inode
 			"tags" : [<integer>, ...] , // Array of Tag ID
