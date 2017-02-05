@@ -17,6 +17,7 @@ public:
 	std::string get(const std::string& path, const char* defvalue) const;
 	template<typename T> T get(const std::string& path, const T& defvalue) const;
 	template<typename T> T get(const std::string& path = std::string()) const;
+	template<typename T> T get(size_t) const;
 	ptree get_child(const std::string& path);
 	const ptree get_child(const std::string& path) const;
 	const ptree get_child(size_t) const;

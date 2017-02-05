@@ -58,6 +58,17 @@ ptree::get(const std::string& path, const T& defvaule) const
 	}
 }
 
+template<typename T>
+T
+ptree::get(size_t idx) const
+{
+	try {
+		return CJSON.at(idx).get<T>();
+	} catch (...) {
+		throw bad_path("INDEX: " + std::to_string(idx));
+	}
+}
+
 namespace {
 	json&
 	recursive_find_reference(
@@ -168,7 +179,7 @@ ptree::get_child(size_t idx) const
 	try {
 		return ptree(const_cast<json*>(&(CJSON.at(idx))));
 	} catch (...) {
-		throw bad_path("Index " + std::to_string(idx));
+		throw bad_path("INDEX: " + std::to_string(idx));
 	}
 }
 
@@ -318,6 +329,10 @@ INSTANT_ALL(INSTANTIATION)
 #undef INSTANTIATION
 
 #define INSTANTIATION(T) template T ptree::get(const std::string& path) const;
+INSTANT_ALL(INSTANTIATION)
+#undef INSTANTIATION
+	
+#define INSTANTIATION(T) template T ptree::get(size_t) const;
 INSTANT_ALL(INSTANTIATION)
 #undef INSTANTIATION
 
