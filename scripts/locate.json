@@ -1,8 +1,0 @@
-{
-"cat" : "byname",
-"matcher" : "regex",
-"pattern" : ".*\\.m4a",
-"sortby" : "<reserved>",
-"start" : "0",
-"number" : "20"
-}
